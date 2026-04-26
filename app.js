@@ -1,5 +1,5 @@
 import express from "express";
-import { getUsers, getUser, createUser, deleteUser, changePassword, 
+import { getUsers, getUser, createUser, deleteUser, changePassword, changeUser,
     getFolders, getFolder, createFolder, deleteFolder, updateFolder,
     getBookmarks, getBookmark, createBookmark, deleteBookmark, updateBookmark,
     getMembers, getMember, createMember, deleteMember, updateMember,

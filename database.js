@@ -51,6 +51,15 @@ export async function deleteUser(user_id){
     return rows
 }
 
+export async function changeUser(user_id){
+    const [rows] = await pool.query(`
+        UPDATE users 
+        SET user_password = "abc"
+        WHERE user_id = ?
+        `, [user_id])
+    return rows
+}
+
 //const result = await deleteUser(6)
 //console.log(result)
 
