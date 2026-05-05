@@ -1,8 +1,8 @@
 import express from "express";
-import { getUsers, getUser, createUser, deleteUser, changePassword, changeUser,
-    getFolders, getFolder, createFolder, deleteFolder, updateFolder,
-    getBookmarks, getBookmark, createBookmark, deleteBookmark, updateBookmark,
-    getMembers, getMember, createMember, deleteMember, updateMember,
+import { getUsers, getUser, createUser, deleteUser, changePassword, 
+    getFolders, getFolder, getFolderByID, createFolder, deleteFolder, updateFolder,
+    getBookmarks, getBookmark, getBookmarkByID, createBookmark, deleteBookmark, updateBookmark,
+    getMembers, getMember, getMemberByID, createMember, deleteMember, updateMember,
     getDomains, getDomain, createDomain, deleteDomain,
     getFilters, getFilter, createFilter, deleteFilter,
     getClickNumbers, getClickNumber, createClickNumber, deleteClickNumber, setClickNumber,
@@ -60,11 +60,25 @@ app.get("/folders", async (req, res) => {
     res.send(folders)
 })
 
+app.get("/folders/:creator_id", async (req, res) => {
+    const creator_id = req.params.creator_id
+    const folder = await getFolder(creator_id)
+    res.send(folder)
+})
+
+app.get("/folder/:folder_id", async (req, res) => {
+    const folder_id = req.params.folder_id
+    const folder = await getFolderByID(folder_id)
+    res.send(folder)
+})
+
+/*
 app.get("/folders/:folder_id", async (req, res) => {
     const folder_id = req.params.folder_id
     const folder = await getFolder(folder_id)
     res.send(folder)
 })
+*/
 
 app.post("/folders", async (req, res) => {
     const { creator_id, name, visibility, member_privileges } = req.body
@@ -78,8 +92,9 @@ app.delete("/folders/:folder_id", async (req, res) => {
     res.status(204).send(folder)
 })
 
-app.put("/folders", async (req, res) => {
-    const { folder_id, name, visibility, member_privileges } = req.body
+app.put("/folders/:folder_id", async (req, res) => {
+    const folder_id = req.params.folder_id
+    const { name, visibility, member_privileges } = req.body
     const folder = await updateFolder(folder_id, name, visibility, member_privileges)
     res.status(200).send(folder)
 })
@@ -91,10 +106,22 @@ app.get("/bookmarks", async (req, res) => {
     const bookmarks = await getBookmarks()
     res.send(bookmarks)
 })
-
+/*
 app.get("/bookmarks/:bookmark_id", async (req, res) => {
     const bookmark_id = req.params.bookmark_id
     const bookmark = await getBookmark(bookmark_id)
+    res.send(bookmark)
+})
+*/
+app.get("/bookmarks/:folder_id", async (req, res) => {
+    const folder_id = req.params.folder_id
+    const bookmark = await getBookmark(folder_id)
+    res.send(bookmark)
+})
+
+app.get("/bookmark/:bookmark_id", async (req, res) => {
+    const bookmark_id = req.params.bookmark_id
+    const bookmark = await getBookmarkByID(bookmark_id)
     res.send(bookmark)
 })
 
@@ -110,8 +137,9 @@ app.delete("/bookmarks/:bookmark_id", async (req, res) => {
     res.status(204).send(bookmark)
 })
 
-app.put("/bookmarks", async (req, res) => {
-    const { bookmark_id, scheduler, change_date, page_status } = req.body
+app.put("/bookmarks/:bookmark_id", async (req, res) => {
+    const bookmark_id = req.params.bookmark_id
+    const { scheduler, change_date, page_status } = req.body
     const bookmark = await updateBookmark(bookmark_id, scheduler, change_date, page_status)
     res.status(200).send(bookmark)
 })
@@ -123,9 +151,15 @@ app.get("/members", async (req, res) => {
     res.send(members)
 })
 
-app.get("/members/:member_id", async (req, res) => {
+app.get("/members/:folder_id", async (req, res) => {
+    const folder_id = req.params.folder_id
+    const members = await getMember(folder_id)
+    res.send(members)
+})
+
+app.get("/member/:member_id", async (req, res) => {
     const member_id = req.params.member_id
-    const member = await getMember(member_id)
+    const member = await getMemberByID(member_id)
     res.send(member)
 })
 

@@ -50,7 +50,7 @@ export async function deleteUser(user_id){
         `, [user_id])
     return rows
 }
-
+/*
 export async function changeUser(user_id){
     const [rows] = await pool.query(`
         UPDATE users 
@@ -59,7 +59,7 @@ export async function changeUser(user_id){
         `, [user_id])
     return rows
 }
-
+*/
 //const result = await deleteUser(6)
 //console.log(result)
 
@@ -90,7 +90,17 @@ export async function getFolders(){
     return rows
 }
 
-export async function getFolder(folder_id){
+export async function getFolder(creator_id){
+    const [rows] = await pool.query(`
+        SELECT * 
+        FROM folders
+        WHERE creator_id = ?
+        `, [creator_id])
+    return rows
+}
+
+
+export async function getFolderByID(folder_id){
     const [rows] = await pool.query(`
         SELECT * 
         FROM folders
@@ -142,7 +152,16 @@ export async function getBookmarks(){
     return rows
 }
 
-export async function getBookmark(bookmark_id){
+export async function getBookmark(folder_id){
+    const [rows] = await pool.query(`
+        SELECT * 
+        FROM bookmarks
+        WHERE folder_id = ?
+        `, [folder_id])
+    return rows
+}
+
+export async function getBookmarkByID(bookmark_id){
     const [rows] = await pool.query(`
         SELECT * 
         FROM bookmarks
@@ -192,7 +211,16 @@ export async function getMembers(){
     return rows
 }
 
-export async function getMember(member_id){
+export async function getMember(folder_id){
+    const [rows] = await pool.query(`
+        SELECT * 
+        FROM members
+        WHERE folder_id = ?
+        `, [folder_id])
+    return rows[0]
+}
+
+export async function getMemberByID(member_id){
     const [rows] = await pool.query(`
         SELECT * 
         FROM members

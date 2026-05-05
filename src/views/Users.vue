@@ -85,6 +85,34 @@
         }
     }
 
+
+/*
+const changePassword = async () => {
+        try {
+            const requestOptions = {
+                method:"PUT",
+                headers: {
+                    "Content-Type":"application/json"
+                },
+                body: JSON.stringify({
+                    user_password: put_user_password.value
+                })
+            }
+            const response = await fetch(`${url.toString()}/${put_user_id.value}`, requestOptions);
+            const data = await response.json;
+            this.put_user_password=data.put_user_password
+            
+
+            put_user_id.value=""
+            put_user_password.value=""
+            await fetchUsers()
+            
+        } catch (error) {
+            console.error(error.message);
+        }
+    }
+*/
+
 onMounted(() => {
     fetchUsers()})
     
