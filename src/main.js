@@ -8,7 +8,6 @@ import Users from './views/Users.vue'
 import User from './views/User.vue'
 import Folders from './views/Folders.vue'
 import Folder from './views/Folder.vue'
-import Bookmarks from './views/Bookmarks.vue'
 import NotFoundView from './views/NotFoundView.vue'
 
 const router = createRouter({

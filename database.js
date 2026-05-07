@@ -217,7 +217,7 @@ export async function getMember(folder_id){
         FROM members
         WHERE folder_id = ?
         `, [folder_id])
-    return rows[0]
+    return rows
 }
 
 export async function getMemberByID(member_id){

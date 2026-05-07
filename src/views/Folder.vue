@@ -190,8 +190,8 @@ onMounted(() => { fetchFolder(), fetchBookmarks(), fetchMembers() })
   </tbody>
   </table>
   </div>
+
     <!-- Członkowie -->
-  <div>
     <h1>Członkowie</h1>
     <table class="w-full table-fixed text-sm text-left text-gray-500 dark:text-gray-400">
     <thead>
@@ -199,17 +199,18 @@ onMounted(() => { fetchFolder(), fetchBookmarks(), fetchMembers() })
             <th>ID członka</th>
             <th>ID użytkownika</th>
             <th>Rola</th>
-            <th>Typ filtru</th>
+            <th>Filtr</th>
         </tr>
     </thead>
     <tbody>
         <tr v-for="member in members" :key="member.member_id">
-        <th scope="row">{{ member.member_id }}</th>
-        <td>{{ member.user_id }}</td>
-        <td>{{ member.role }}</td>
-        <td>{{ member.filter_type }}</td>
+            <th scope="row">
+                {{ member.member_id }}
+            </th>
+            <td>{{ member.user_id }}</td>
+            <td>{{ member.role }}</td>
+            <td>{{ member.filter_type }}</td>
         </tr>
   </tbody>
   </table>
-  </div>
 </template>
