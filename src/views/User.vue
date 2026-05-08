@@ -38,6 +38,7 @@ onMounted(() => {
 </script>
 
 <template>
+<div class="p-4 sm:ml-64">
   <div v-if="user">
     <h1>User</h1>
     <h4>ID: {{ user.user_id }}</h4>
@@ -69,4 +70,5 @@ onMounted(() => {
   </tbody>
   </table>
   </div>
+</div>
 </template>

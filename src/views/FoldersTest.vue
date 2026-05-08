@@ -21,10 +21,10 @@ onMounted(() => { fetchFolders() })
 </script>
 
 <template>
-<div class="p-4 sm:ml-64">
+ <div class="p-4 sm:ml-64">
   <h1>Folders</h1>
-  <table class="w-full text-sm text-left rtl:text-right text-body">
-    <thead class="text-sm text-body bg-neutral-secondary-soft border-b rounded-base border-default">
+  <table class="w-full table-fixed text-sm text-left text-gray-500 dark:text-gray-400">
+    <thead>
         <tr>
             <th>id folderu</th>
             <th>id twórcy</th>
@@ -45,10 +45,5 @@ onMounted(() => { fetchFolders() })
         </tr>
   </tbody>
   </table>
-</div>
-<div class="p-4 sm:ml-64">
-  <ul v-for="folder in folders" :key="folder.folder_id">
-    <li>{{ folder.name }}</li>
-  </ul>
 </div>
 </template>

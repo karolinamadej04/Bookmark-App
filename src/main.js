@@ -1,5 +1,3 @@
-//import './assets/main.css'
-
 import { createRouter, createWebHistory } from 'vue-router'
 import { createApp } from 'vue'
 import App from './App.vue'
@@ -7,6 +5,8 @@ import Home from './views/Home.vue'
 import Users from './views/Users.vue'
 import User from './views/User.vue'
 import Folders from './views/Folders.vue'
+import FoldersTest from './views/FoldersTest.vue'
+import FolderTest from './views/FolderTest.vue'
 import Folder from './views/Folder.vue'
 import NotFoundView from './views/NotFoundView.vue'
 
@@ -16,7 +16,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: Home,
+      component: Folders,
     },
     {
       path: '/users',
@@ -42,6 +42,16 @@ const router = createRouter({
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: NotFoundView,
+    },
+    {
+      path: '/folderstest',
+      name: 'folderstest',
+      component: FoldersTest,
+    },
+    {
+      path: '/folderstest/:folder_id',
+      name: 'foldertest',
+      component: FolderTest,
     },
   ],
 })

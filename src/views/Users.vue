@@ -119,6 +119,7 @@ onMounted(() => {
 </script>
 
 <template>
+<div class="p-4 sm:ml-64">
     <h1>Users</h1>
     <table class="w-full table-fixed text-sm text-left text-gray-500 dark:text-gray-400">
     <thead>
@@ -158,4 +159,5 @@ onMounted(() => {
     <input type="text" class= "mb-3" v-model="put_user_password" placeholder="hasło użytkownika" required><br>
     <button type="submit" class= "btn btn-primary mb-3">Zmień hasło</button>
 </form>
+</div>
 </template>
