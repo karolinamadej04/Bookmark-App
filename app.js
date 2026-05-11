@@ -3,8 +3,8 @@ import { getUsers, getUser, createUser, deleteUser, changePassword,
     getFolders, getFolder, getFolderByID, createFolder, deleteFolder, updateFolder,
     getBookmarks, getBookmark, getBookmarkByID, createBookmark, deleteBookmark, updateBookmark,
     getMembers, getMember, getMemberByID, createMember, deleteMember, updateMember,
-    getDomains, getDomain, createDomain, deleteDomain,
-    getFilters, getFilter, createFilter, deleteFilter,
+    getDomains, getDomain, getDomainByID, createDomain, deleteDomain,
+    getFilters, getFilter, getFilterByID, createFilter, deleteFilter,
     getClickNumbers, getClickNumber, createClickNumber, deleteClickNumber, setClickNumber,
     getManagers, getManager, createManager, deleteManager, changeManagerPassword,
     getReports, getReport, createReport, deleteReport} from './database.js'
@@ -189,9 +189,9 @@ app.get("/domains", async (req, res) => {
     res.send(domains)
 })
 
-app.get("/domains/:domain_id", async (req, res) => {
-    const domain_id = req.params.domain_id
-    const domain = await getDomain(domain_id)
+app.get("/domains/:folder_id", async (req, res) => {
+    const folder_id = req.params.folder_id
+    const domain = await getDomain(folder_id)
     res.send(domain)
 })
 
@@ -214,9 +214,9 @@ app.get("/filters", async (req, res) => {
     res.send(filter)
 })
 
-app.get("/filters/:filter_id", async (req, res) => {
-    const filter_id = req.params.filter_id
-    const filter = await getFilter(filter_id)
+app.get("/filters/:folder_id", async (req, res) => {
+    const folder_id = req.params.folder_id
+    const filter = await getFilter(folder_id)
     res.send(filter)
 })
 

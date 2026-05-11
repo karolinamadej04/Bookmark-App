@@ -210,11 +210,20 @@ export async function getMembers(){
     const [rows] = await pool.query("SELECT * FROM members")
     return rows
 }
-
+/*
 export async function getMember(folder_id){
     const [rows] = await pool.query(`
         SELECT * 
         FROM members
+        WHERE folder_id = ?
+        `, [folder_id])
+    return rows
+}*/
+export async function getMember(folder_id){
+    const [rows] = await pool.query(`
+        SELECT members.member_id, members.folder_id, members.user_id, members.role, members.filter_type, users.email 
+        FROM members
+        LEFT JOIN users ON members.user_id = users.user_id
         WHERE folder_id = ?
         `, [folder_id])
     return rows
@@ -263,7 +272,16 @@ export async function getDomains(){
     return rows
 }
 
-export async function getDomain(domain_id){
+export async function getDomain(folder_id){
+    const [rows] = await pool.query(`
+        SELECT * 
+        FROM domains
+        WHERE folder_id = ?
+        `, [folder_id])
+    return rows
+}
+
+export async function getDomainByID(domain_id){
     const [rows] = await pool.query(`
         SELECT * 
         FROM domains
@@ -298,7 +316,16 @@ export async function getFilters(){
     return rows
 }
 
-export async function getFilter(filter_id){
+export async function getFilter(folder_id){
+    const [rows] = await pool.query(`
+        SELECT * 
+        FROM filters
+        WHERE folder_id = ?
+        `, [folder_id])
+    return rows
+}
+
+export async function getFilterByID(filter_id){
     const [rows] = await pool.query(`
         SELECT * 
         FROM filters

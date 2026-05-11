@@ -6,14 +6,58 @@ const url = "http://localhost:8080/folder";
 const url2 = "http://localhost:8080/bookmarks";
 const url3 = "http://localhost:8080/folders";
 const url4 = "http://localhost:8080/members";
+const url5 = "http://localhost:8080/domains";
+const url6 = "http://localhost:8080/filters";
 const route = useRoute()
 const folder = ref(null)
 const bookmarks = ref([])
 const members = ref([])
+const domains = ref([])
+const filters = ref([])
 const visibility = ref(null)
 const member_privileges = ref(null)
 const name = ref(null)
+const domain = ref("")
+const filtered_phrase = ref("")
+const link = ref("")
 
+const addBookmark = async () => {
+        try {
+            const response = await fetch(url2.toString(), {
+                method:"POST",
+                headers: {
+                    "Content-Type":"application/json"
+                },
+                body: JSON.stringify({
+                    folder_id:route.params.folder_id,
+                    link: link.value
+                })
+            });
+            if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+            }
+
+            link.value=""
+            await fetchBookmarks()
+        } catch (error) {
+            console.error(error.message);
+        }
+    }
+
+const deleteBookmark = async (bookmark_id) => {
+        try {
+            const response = await fetch(url2+`/${bookmark_id}`, {
+                method:"DELETE",
+            })
+
+            if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`)
+            }
+            await fetchBookmarks()
+        } catch (error) {
+            console.error(error.message);
+        }
+}
 
 const changeName = async () => {
         try {
@@ -86,6 +130,81 @@ const changeMemberPrivileges = async () => {
             console.error(error.message);
         }
     }
+const addDomain = async () => {
+        try {
+            const response = await fetch(url5.toString(), {
+                method:"POST",
+                headers: {
+                    "Content-Type":"application/json"
+                },
+                body: JSON.stringify({
+                    domain:domain.value,
+                    folder_id:route.params.folder_id
+                })
+            });
+            if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+            }
+
+            domain.value=""
+            await fetchDomains()
+        } catch (error) {
+            console.error(error.message);
+        }
+    }
+
+const deleteDomain = async (domain_id) => {
+        try {
+            const response = await fetch(url5+`/${domain_id}`, {
+                method:"DELETE",
+            })
+
+            if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`)
+            }
+            await fetchDomains()
+        } catch (error) {
+            console.error(error.message);
+        }
+}
+
+const addFilter = async () => {
+        try {
+            const response = await fetch(url6.toString(), {
+                method:"POST",
+                headers: {
+                    "Content-Type":"application/json"
+                },
+                body: JSON.stringify({
+                    filtered_phrase:filtered_phrase.value,
+                    folder_id:route.params.folder_id
+                })
+            });
+            if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+            }
+
+            filtered_phrase.value=""
+            await fetchFilters()
+        } catch (error) {
+            console.error(error.message);
+        }
+    }
+
+const deleteFilter = async (filter_id) => {
+        try {
+            const response = await fetch(url6+`/${filter_id}`, {
+                method:"DELETE",
+            })
+
+            if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`)
+            }
+            await fetchFilters()
+        } catch (error) {
+            console.error(error.message);
+        }
+}
 
 async function fetchFolder() {
         try {
@@ -123,8 +242,32 @@ async function fetchMembers() {
         }
     }
 
+async function fetchDomains() {
+        try {
+            const response = await fetch(`${url5.toString()}/${route.params.folder_id}`);
+            if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+            }
+            domains.value = await response.json();
+        } catch (error) {
+            console.error(error.message);
+        }
+    }
 
-onMounted(() => { fetchFolder(), fetchBookmarks(), fetchMembers() })
+async function fetchFilters() {
+        try {
+            const response = await fetch(`${url6.toString()}/${route.params.folder_id}`);
+            if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+            }
+            filters.value = await response.json();
+        } catch (error) {
+            console.error(error.message);
+        }
+    }
+
+
+onMounted(() => { fetchFolder(), fetchBookmarks(), fetchMembers(), fetchDomains(), fetchFilters() })
 
 </script>
 
@@ -136,10 +279,16 @@ onMounted(() => { fetchFolder(), fetchBookmarks(), fetchMembers() })
             <button class="inline-block p-4 border-b-2 rounded-t-base" id="profile-tab" data-tabs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Folder</button>
         </li>
         <li class="me-2" role="presentation">
-            <button class="inline-block p-4 border-b-2 rounded-t-base hover:text-fg-brand hover:border-brand" id="dashboard-tab" data-tabs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="false">Członkowie</button>
+            <button class="inline-block p-4 border-b-2 rounded-t-base hover:text-fg-brand hover:border-brand" id="members-tab" data-tabs-target="#members" type="button" role="tab" aria-controls="members" aria-selected="false">Członkowie</button>
         </li>
         <li class="me-2" role="presentation">
             <button class="inline-block p-4 border-b-2 rounded-t-base hover:text-fg-brand hover:border-brand" id="settings-tab" data-tabs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="false">Ustawienia</button>
+        </li>
+        <li class="me-2" role="presentation">
+            <button class="inline-block p-4 border-b-2 rounded-t-base hover:text-fg-brand hover:border-brand" id="domains-tab" data-tabs-target="#domains" type="button" role="tab" aria-controls="domains" aria-selected="false">Domeny</button>
+        </li>
+        <li class="me-2" role="presentation">
+            <button class="inline-block p-4 border-b-2 rounded-t-base hover:text-fg-brand hover:border-brand" id="filters-tab" data-tabs-target="#filters" type="button" role="tab" aria-controls="filters" aria-selected="false">Filtry</button>
         </li>
     </ul>
 </div>
@@ -174,7 +323,7 @@ onMounted(() => { fetchFolder(), fetchBookmarks(), fetchMembers() })
                     </ul>
                 </div>
 
-                <button type="button" class="inline-flex items-center  text-white bg-brand hover:bg-brand-strong box-border border border-transparent focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">
+                <button data-modal-target="default-modal-0" data-modal-toggle="default-modal-0" class="inline-flex items-center  text-white bg-brand hover:bg-brand-strong box-border border border-transparent focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none" type="button">
                     Dodaj
                     <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
   <path stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5"/>
@@ -194,7 +343,7 @@ onMounted(() => { fetchFolder(), fetchBookmarks(), fetchMembers() })
                         Ostatnio zaktualizowano: {{ bookmark.change_date }}<br>
                     Utworzono: {{ bookmark.creation_date }}</p>
                     <div>
-                        <button type="button" class="inline-flex items-center w-auto text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">
+                        <button @click="deleteBookmark(bookmark.bookmark_id)" type="button" class="inline-flex items-center w-auto text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">
                             <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/></svg>
                             Usuń
                         </button>
@@ -203,8 +352,44 @@ onMounted(() => { fetchFolder(), fetchBookmarks(), fetchMembers() })
             </a>
         </li>
     </ul>
+
+
+    <!-- Main modal -->
+    <div id="default-modal-0" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+        <form @submit.prevent="addBookmark">
+        <div class="relative p-4 w-full max-w-2xl max-h-full">
+            <!-- Modal content -->
+            <div class="relative bg-neutral-primary-soft border border-default rounded-base shadow-sm p-4 md:p-6">
+                <!-- Modal header -->
+                <div class="flex items-center justify-between border-b border-default pb-4 md:pb-5">
+                    <h3 class="text-lg font-medium text-heading">
+                        Dodaj zakładkę
+                    </h3>
+                    <button type="button" class="text-body bg-transparent hover:bg-neutral-tertiary hover:text-heading rounded-base text-sm w-9 h-9 ms-auto inline-flex justify-center items-center" data-modal-hide="default-modal-0">
+                        <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/></svg>
+                        <span class="sr-only">Zamknij</span>
+                    </button>
+                </div>
+                <!-- Modal body -->
+                <div class="space-y-4 md:space-y-6 py-4 md:py-6">
+                    <p class="leading-relaxed text-body">       
+                            <input type="text" class= "mb-3" v-model="link" placeholder="link" required><br>
+                    </p>
+                </div>
+                <!-- Modal footer -->
+                <div class="flex items-center border-t border-default space-x-4 pt-4 md:pt-5">
+                    <button data-modal-hide="default-modal-0" type="submit" class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">Dodaj</button>
+                    <button data-modal-hide="default-modal-0" type="reset" class="text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">Zamknij</button>
+                </div>
+            </div>
+        </div>
+        </form>
     </div>
-    <div class="hidden p-4 rounded-base bg-neutral-secondary-soft" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+
+
+
+    </div>
+    <div class="hidden p-4 rounded-base bg-neutral-secondary-soft" id="members" role="tabpanel" aria-labelledby="members-tab">
         <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
             <h4 class="text-3xl font-bold tracking-tight text-heading md:text-4xl">Członkowie</h4>
             
@@ -217,6 +402,7 @@ onMounted(() => { fetchFolder(), fetchBookmarks(), fetchMembers() })
     <thead>
         <tr>
             <th>ID członka</th>
+            <th>Email</th>
             <th>ID użytkownika</th>
             <th>Rola</th>
             <th>Filtr</th>
@@ -227,6 +413,7 @@ onMounted(() => { fetchFolder(), fetchBookmarks(), fetchMembers() })
             <th scope="row">
                 {{ member.member_id }}
             </th>
+            <td>{{ member.email }}</td>
             <td>{{ member.user_id }}</td>
             <td>{{ member.role }}</td>
             <td>{{ member.filter_type }}</td>
@@ -270,5 +457,143 @@ onMounted(() => { fetchFolder(), fetchBookmarks(), fetchMembers() })
   </div>
     </div>
 </div>
+<div class="hidden p-4 rounded-base bg-neutral-secondary-soft" id="domains" role="tabpanel" aria-labelledby="domains-tab">
+        <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+            <h4 class="text-3xl font-bold tracking-tight text-heading md:text-4xl">Dozwolone domeny</h4>
+            
+            <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-search">
+                <button data-modal-target="default-modal" data-modal-toggle="default-modal" class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none" type="button">Dodaj</button>
+                <input type="text" id="input-group-1" class="block w-full ps-9 pe-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand px-2.5 py-2 shadow-xs placeholder:text-body" placeholder="Szukaj">
+            </div>
+        </div>
+    <table class="w-full table-fixed text-sm text-left text-gray-500 dark:text-gray-400">
+    <thead>
+        <tr>
+            <th>ID domeny</th>
+            <th>Domena</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr v-for="domain in domains" :key="domain.domain_id">
+            <th scope="row">
+                {{ domain.domain_id }}
+            </th>
+            <td>{{ domain.domain }}</td>
+            <td>
+                <button @click="deleteDomain(domain.domain_id)" type="button" class="inline-flex items-center w-auto text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">
+                            <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/></svg>
+                            Usuń
+                </button>
+            </td>
+        </tr>
+  </tbody>
+  </table>
+
+<!-- Main modal -->
+<div id="default-modal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+    <form @submit.prevent="addDomain">
+    <div class="relative p-4 w-full max-w-2xl max-h-full">
+        <!-- Modal content -->
+        <div class="relative bg-neutral-primary-soft border border-default rounded-base shadow-sm p-4 md:p-6">
+            <!-- Modal header -->
+            <div class="flex items-center justify-between border-b border-default pb-4 md:pb-5">
+                <h3 class="text-lg font-medium text-heading">
+                    Dodaj nową domenę
+                </h3>
+                <button type="button" class="text-body bg-transparent hover:bg-neutral-tertiary hover:text-heading rounded-base text-sm w-9 h-9 ms-auto inline-flex justify-center items-center" data-modal-hide="default-modal">
+                    <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/></svg>
+                    <span class="sr-only">Zamknij</span>
+                </button>
+            </div>
+            <!-- Modal body -->
+            <div class="space-y-4 md:space-y-6 py-4 md:py-6">
+                <p class="leading-relaxed text-body">
+                    Dodaj element do listy dozwolonych domen.
+                </p>
+                <p class="leading-relaxed text-body">
+                    
+                        <input type="text" class= "mb-3" v-model="domain" placeholder="domena" required><br>
+                </p>
+            </div>
+            <!-- Modal footer -->
+            <div class="flex items-center border-t border-default space-x-4 pt-4 md:pt-5">
+                <button data-modal-hide="default-modal" type="submit" class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">Dodaj</button>
+                <button data-modal-hide="default-modal" type="reset" class="text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">Zamknij</button>
+            </div>
+        </div>
+    </div>
+    </form>
+</div>
+</div>
+
+
+
+
+<div class="hidden p-4 rounded-base bg-neutral-secondary-soft" id="filters" role="tabpanel" aria-labelledby="filters-tab">
+        <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+            <h4 class="text-3xl font-bold tracking-tight text-heading md:text-4xl">Filtry</h4>
+            
+            <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-search">
+                <button data-modal-target="default-modal2" data-modal-toggle="default-modal2" class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none" type="button">Dodaj</button>
+                <input type="text" id="input-group-1" class="block w-full ps-9 pe-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand px-2.5 py-2 shadow-xs placeholder:text-body" placeholder="Szukaj">
+            </div>
+        </div>
+    <table class="w-full table-fixed text-sm text-left text-gray-500 dark:text-gray-400">
+    <thead>
+        <tr>
+            <th>ID filtru</th>
+            <th>Filtrowany zwrot</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr v-for="filter in filters" :key="filter.filter_id">
+            <th scope="row">
+                {{ filter.filter_id }}
+            </th>
+            <td>{{ filter.filtered_phrase }}</td>
+            <td>
+                <button @click="deleteFilter(filter.filter_id)" type="button" class="inline-flex items-center w-auto text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">
+                            <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/></svg>
+                            Usuń
+                </button>
+            </td>
+        </tr>
+  </tbody>
+  </table>
+</div>
+<!-- Main modal -->
+<div id="default-modal2" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+    <form @submit.prevent="addFilter">
+    <div class="relative p-4 w-full max-w-2xl max-h-full">
+        <!-- Modal content -->
+        <div class="relative bg-neutral-primary-soft border border-default rounded-base shadow-sm p-4 md:p-6">
+            <!-- Modal header -->
+            <div class="flex items-center justify-between border-b border-default pb-4 md:pb-5">
+                <h3 class="text-lg font-medium text-heading">
+                    Dodaj filtrowany zwrot
+                </h3>
+                <button type="button" class="text-body bg-transparent hover:bg-neutral-tertiary hover:text-heading rounded-base text-sm w-9 h-9 ms-auto inline-flex justify-center items-center" data-modal-hide="default-modal2">
+                    <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/></svg>
+                    <span class="sr-only">Zamknij</span>
+                </button>
+            </div>
+            <!-- Modal body -->
+            <div class="space-y-4 md:space-y-6 py-4 md:py-6">
+                <p class="leading-relaxed text-body">
+                        <input type="text" class= "mb-3" v-model="filtered_phrase" placeholder="filtr" required><br>
+                </p>
+            </div>
+            <!-- Modal footer -->
+            <div class="flex items-center border-t border-default space-x-4 pt-4 md:pt-5">
+                <button data-modal-hide="default-modal2" type="submit" class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">Dodaj</button>
+                <button data-modal-hide="default-modal2" type="reset" class="text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">Zamknij</button>
+            </div>
+        </div>
+    </div>
+    </form>
+</div>
+
 </div>
 </template>
