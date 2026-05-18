@@ -1,14 +1,19 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, onMounted, computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useFolders } from '@/stores/folders'
 
-const url = "http://localhost:8080/folder";
+const url = "http://localhost:8080/myfolders";
 const url2 = "http://localhost:8080/bookmarks";
 const url3 = "http://localhost:8080/folders";
 const url4 = "http://localhost:8080/members";
 const url5 = "http://localhost:8080/domains";
 const url6 = "http://localhost:8080/filters";
 const route = useRoute()
+const router = useRouter()
+
+const { fetchFolders } = useFolders()
+
 const folder = ref(null)
 const bookmarks = ref([])
 const members = ref([])
@@ -20,7 +25,37 @@ const name = ref(null)
 const domain = ref("")
 const filtered_phrase = ref("")
 const link = ref("")
-const token = localStorage.getItem('token')
+const isValidLink = computed(() => {
+    if (!link.value) return false
+
+    try {
+        const url = new URL(link.value)
+        return (
+            url.protocol === "http:" ||
+            url.protocol === "https:"
+        )
+    } catch {
+        return false
+    }
+})
+
+//const token = localStorage.getItem('token')
+
+const removeFolder = async () => {
+        try {
+            const response = await fetch(url3+`/${route.params.folder_id}`, {
+                method:"DELETE",
+            })
+
+            if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`)
+            }
+            await fetchFolders()
+            router.push('/folders')
+        } catch (error) {
+            console.error(error.message);
+        }
+    }
 
 const addBookmark = async () => {
         try {
@@ -78,7 +113,7 @@ const changeName = async () => {
             }
 
             name.value = ""
-            await fetchFolder()
+            await fetchFolders()
         } catch (error) {
             console.error(error.message);
         }
@@ -102,7 +137,7 @@ const changeVisibility = async () => {
             }
 
             visibility.value = null
-            await fetchFolder()
+            await fetchFolders()
         } catch (error) {
             console.error(error.message);
         }
@@ -126,7 +161,7 @@ const changeMemberPrivileges = async () => {
             }
 
             member_privileges.value = null
-            await fetchFolder()
+            await fetchFolders()
         } catch (error) {
             console.error(error.message);
         }
@@ -209,13 +244,26 @@ const deleteFilter = async (filter_id) => {
 
 async function fetchFolder() {
         try {
-            const response = await fetch(`${url.toString()}/${route.params.folder_id}`);
+            const token = localStorage.getItem('token')
+            const response = await fetch(`${url.toString()}/${route.params.folder_id}`, {
+               headers: {
+                  Authorization: `Bearer ${token}`
+               }
+            });
+
+            if (response.status === 404){
+                router.push('/not-found')
+                return
+            }
+
             if (!response.ok) {
             throw new Error(`Response status: ${response.status}`);
             }
+
             folder.value = await response.json();
         } catch (error) {
             console.error(error.message);
+            router.push('/not-found')
         }
     }
 
@@ -300,8 +348,23 @@ onMounted(() => { fetchFolder(), fetchBookmarks(), fetchMembers(), fetchDomains(
                 <h4 v-if="folder" class="text-3xl font-bold tracking-tight text-heading md:text-4xl">{{folder.name}}</h4>
             </div>
             <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-search">
-                
-                <button id="dropdownDefaultButton" data-dropdown-toggle="dropdown" class="inline-flex items-center justify-center text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none" type="button">
+                <button data-modal-target="default-modal-0" data-modal-toggle="default-modal-0" class="inline-flex items-center  text-white bg-brand hover:bg-brand-strong box-border border border-transparent focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none" type="button">
+                    Dodaj
+                    <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5"/></svg>
+
+                </button>
+                <button data-modal-target="remove-folder-modal" data-modal-toggle="remove-folder-modal" class="inline-flex items-center text-nowrap text-white bg-danger hover:bg-danger-strong box-border border border-transparent focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none" type="button">
+                    Usuń folder
+                    <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/></svg>
+
+
+                </button>
+                <input type="text" id="input-group-1" class="block w-full ps-9 pe-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand px-2.5 py-2 shadow-xs placeholder:text-body" placeholder="Szukaj">
+            </div>
+        </div>
+        
+        <div>
+        <button id="dropdownDefaultButton" data-dropdown-toggle="dropdown" class="inline-flex items-center justify-center text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none" type="button">
                 Filtruj 
                 <svg class="w-4 h-4 ms-1.5 -me-0.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/></svg>
                 </button>
@@ -323,17 +386,8 @@ onMounted(() => { fetchFolder(), fetchBookmarks(), fetchMembers(), fetchDomains(
                     </li>
                     </ul>
                 </div>
-
-                <button data-modal-target="default-modal-0" data-modal-toggle="default-modal-0" class="inline-flex items-center  text-white bg-brand hover:bg-brand-strong box-border border border-transparent focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none" type="button">
-                    Dodaj
-                    <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-  <path stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5"/>
-</svg>
-
-                </button>
-                <input type="text" id="input-group-1" class="block w-full ps-9 pe-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand px-2.5 py-2 shadow-xs placeholder:text-body" placeholder="Szukaj">
             </div>
-        </div>
+
         <ul>
         <li v-for="bookmark in bookmarks" :key="bookmark.bookmark_id">
             <a href="#" class="flex flex-col items-center bg-neutral-primary-soft p-6 border border-default rounded-base shadow-xs md:flex-row md:max-w-5xl">
@@ -355,7 +409,7 @@ onMounted(() => { fetchFolder(), fetchBookmarks(), fetchMembers(), fetchDomains(
     </ul>
 
 
-    <!-- Main modal -->
+    <!-- Add bookmark modal -->
     <div id="default-modal-0" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
         <form @submit.prevent="addBookmark">
         <div class="relative p-4 w-full max-w-2xl max-h-full">
@@ -374,18 +428,52 @@ onMounted(() => { fetchFolder(), fetchBookmarks(), fetchMembers(), fetchDomains(
                 <!-- Modal body -->
                 <div class="space-y-4 md:space-y-6 py-4 md:py-6">
                     <p class="leading-relaxed text-body">       
-                            <input type="text" class= "mb-3" v-model="link" placeholder="link" required><br>
+                            <input type="url" class= "mb-1" v-model="link" placeholder="https://example.com" required><br>
+                    </p>
+                    <p
+                        v-if="link && !isValidLink"
+                        class="text-red-500 text-sm"
+                    >
+                        Wprowadź poprawny link URL
                     </p>
                 </div>
                 <!-- Modal footer -->
                 <div class="flex items-center border-t border-default space-x-4 pt-4 md:pt-5">
-                    <button data-modal-hide="default-modal-0" type="submit" class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">Dodaj</button>
+                    <button data-modal-hide="default-modal-0" type="submit" :disabled="!isValidLink" class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">Dodaj</button>
                     <button data-modal-hide="default-modal-0" type="reset" class="text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">Zamknij</button>
                 </div>
             </div>
         </div>
         </form>
     </div>
+
+
+    <!-- Remove folder modal -->
+    <div id="remove-folder-modal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+        <form @submit.prevent="removeFolder">
+        <div class="relative p-4 w-full max-w-2xl max-h-full">
+            <!-- Modal content -->
+            <div class="relative bg-neutral-primary-soft border border-default rounded-base shadow-sm p-4 md:p-6">
+                <!-- Modal header -->
+                <div class="flex items-center justify-between border-b border-default pb-4 md:pb-5">
+                    <h3 class="text-lg font-medium text-heading">
+                        Czy na pewno chcesz usunąć folder?
+                    </h3>
+                    <button type="button" class="text-body bg-transparent hover:bg-neutral-tertiary hover:text-heading rounded-base text-sm w-9 h-9 ms-auto inline-flex justify-center items-center" data-modal-hide="remove-folder-modal">
+                        <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/></svg>
+                        <span class="sr-only">Zamknij</span>
+                    </button>
+                </div>
+                <!-- Modal footer -->
+                <div class="flex items-center border-t border-default space-x-4 pt-4 md:pt-5">
+                    <button data-modal-hide="remove-folder-modal" type="reset" class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">Nie</button>
+                    <button data-modal-hide="remove-folder-modal" type="submit" class="text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">Tak</button>
+                </div>
+            </div>
+        </div>
+        </form>
+    </div>
+
 
 
 

@@ -1,6 +1,6 @@
 import express from "express";
 import { getUsers, getUser, getUserByEmail, createUser, deleteUser, changePassword, 
-    getFolders, getFolder, getFolderByID, createFolder, deleteFolder, updateFolder,
+    getFolders, getFolderByUser, getFolderByID, getMyFolder, createFolder, deleteFolder, updateFolder,
     getBookmarks, getBookmark, getBookmarkByID, createBookmark, deleteBookmark, updateBookmark,
     getMembers, getMember, getMemberByID, createMember, deleteMember, updateMember,
     getDomains, getDomain, getDomainByID, createDomain, deleteDomain,
@@ -104,14 +104,33 @@ app.get("/folders", async (req, res) => {
 })
 
 app.get("/folders/:creator_id", async (req, res) => {
-    const creator_id = req.params.creator_id
-    const folder = await getFolder(creator_id)
+    const user_id = req.params.creator_id
+    const folder = await getFolderByUser(user_id)
     res.send(folder)
 })
 
 app.get("/folder/:folder_id", async (req, res) => {
     const folder_id = req.params.folder_id
     const folder = await getFolderByID(folder_id)
+    res.send(folder)
+})
+
+app.get("/myfolders", authenticateToken, async (req, res) => {
+    const user_id = req.user.user_id
+    const folders = await getFolderByUser(user_id)
+    res.send(folders)
+})
+app.get("/myfolders/:folder_id", authenticateToken, async (req, res) => {
+    const folder_id = req.params.folder_id
+    const user_id = req.user.user_id
+    const folder = await getMyFolder(folder_id, user_id)
+
+    if (!folder){
+        return res.status(404).send({
+            message: "Nie znaleziono folderu."
+        })
+    }
+
     res.send(folder)
 })
 
@@ -125,6 +144,13 @@ app.get("/folders/:folder_id", async (req, res) => {
 
 app.post("/folders", async (req, res) => {
     const { creator_id, name, visibility, member_privileges } = req.body
+    const folder = await createFolder(creator_id, name, visibility, member_privileges)
+    res.status(201).send(folder)
+})
+
+app.post("/myfolders", authenticateToken, async (req, res) => {
+    const creator_id = req.user.user_id
+    const { name, visibility, member_privileges } = req.body
     const folder = await createFolder(creator_id, name, visibility, member_privileges)
     res.status(201).send(folder)
 })
@@ -170,6 +196,33 @@ app.get("/bookmark/:bookmark_id", async (req, res) => {
 
 app.post("/bookmarks", async (req, res) => {
     const { folder_id, link } = req.body
+    if (!link) {
+        return res.status(400).send({
+            message: "Potrzeba linku"
+        })
+    }
+
+    try {
+
+        const url = new URL(link)
+
+        if (
+            url.protocol !== "http:" &&
+            url.protocol !== "https:"
+        ) {
+
+            return res.status(400).send({
+                message: "Only HTTP/HTTPS links allowed"
+            })
+        }
+
+    } catch {
+
+        return res.status(400).send({
+            message: "Invalid URL"
+        })
+    }
+
     const bookmark = await createBookmark(folder_id, link)
     res.status(201).send(bookmark)
 })

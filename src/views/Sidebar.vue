@@ -2,22 +2,64 @@
 import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/stores/auth';
+import { useFolders } from '@/stores/folders'
 
+const { folders, fetchFolders } = useFolders()
 const router = useRouter()
 const { isLoggedIn, logout } = useAuth()
-const url = "http://localhost:8080/folders";
-const folders = ref([])
+const url = "http://localhost:8080/myfolders";
 const showMyFolders = ref(false)
 const showOtherFolders = ref(false)
+
+// form for adding folders
+const foldername = ref("")
+const visibility = ref(0)
+const member_privileges = ref(0)
 
 function handleLogout() {
    logout()
    router.push('login')
 }
 
+const addFolder = async () => {
+        try {
+            const token = localStorage.getItem('token')
+            const response = await fetch(url.toString(), {
+                method:"POST",
+                headers: {
+                    "Content-Type":"application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    name:foldername.value,
+                    visibility: visibility.value,
+                    member_privileges:member_privileges.value
+                })
+            });
+            if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+            }
+
+            foldername.value=""
+            visibility.value=""
+            member_privileges.value=""
+
+            await fetchFolders()
+        } catch (error) {
+            console.error(error.message);
+        }
+    }
+
+/*
 async function fetchFolders() {
         try {
-            const response = await fetch(url.toString());
+            const token = localStorage.getItem('token')
+            const response = await fetch(url.toString(), {
+               headers: {
+                  Authorization: `Bearer ${token}`
+               }
+            });
+            
             if (!response.ok) {
             throw new Error(`Response status: ${response.status}`);
             }
@@ -27,7 +69,19 @@ async function fetchFolders() {
             console.error(error.message);
         }
     }
-onMounted(() => { fetchFolders() })
+*/
+
+onMounted(() => { 
+   if (isLoggedIn.value) { fetchFolders() } 
+})
+
+watch(isLoggedIn, (loggedIn) => {
+   if (loggedIn){
+      fetchFolders()
+   } else{
+      folders.value = []
+   }
+})
 </script>
 
 <template>
@@ -41,6 +95,14 @@ onMounted(() => { fetchFolders() })
 <aside id="sidebar-multi-level-sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
    <div class="h-full px-3 py-4 overflow-y-auto bg-neutral-primary-soft border-e border-default">
       <ul v-if="isLoggedIn" class="space-y-2 font-medium">
+         <li>
+            <button data-modal-target="add-folder-modal" data-modal-toggle="add-folder-modal" class="inline-flex items-center  text-white bg-brand hover:bg-brand-strong box-border border border-transparent focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none" type="button">
+                    Dodaj folder
+                    <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                      <path stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5"/>
+                     </svg>
+                </button>
+         </li>
          <li>
             <button type="button" @click="showMyFolders = !showMyFolders" class="flex items-center w-full justify-between px-2 py-1.5 text-body rounded-base hover:bg-neutral-tertiary hover:text-fg-brand group">
                   <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.5 8H4m0-2v13a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1h-5.032a1 1 0 0 1-.768-.36l-1.9-2.28a1 1 0 0 0-.768-.36H5a1 1 0 0 0-1 1Z"/></svg>
@@ -109,4 +171,54 @@ onMounted(() => { fetchFolders() })
       </ul>
    </div>
 </aside>
+<!-- Add folder modal -->
+    <div id="add-folder-modal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+        <form @submit.prevent="addFolder">
+        <div class="relative p-4 w-full max-w-2xl max-h-full">
+            <!-- Modal content -->
+            <div class="relative bg-neutral-primary-soft border border-default rounded-base shadow-sm p-4 md:p-6">
+                <!-- Modal header -->
+                <div class="flex items-center justify-between border-b border-default pb-4 md:pb-5">
+                    <h3 class="text-lg font-medium text-heading">
+                        Dodaj folder
+                    </h3>
+                    <button type="button" class="text-body bg-transparent hover:bg-neutral-tertiary hover:text-heading rounded-base text-sm w-9 h-9 ms-auto inline-flex justify-center items-center" data-modal-hide="add-folder-modal">
+                        <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/></svg>
+                        <span class="sr-only">Zamknij</span>
+                    </button>
+                </div>
+                <!-- Modal body -->
+                <div class="space-y-4 md:space-y-6 py-4 md:py-6">
+                    <p class="leading-relaxed text-body">       
+                            <input type="text" class= "mb-3" v-model="foldername" placeholder="nazwa" required><br>
+                    </p>
+                    
+                     <h3 class="text-lg font-medium text-heading">
+                        Widoczność folderu
+                     </h3>
+                    <select class= "mb-3" v-model.number="visibility" min="0" max="2" required>
+                     <option value=0>Prywatny</option>
+                     <option value=1>Ograniczony</option>
+                     <option value=2>Publiczny</option>
+                    </select>
+                    
+                     <h3 class="text-lg font-medium text-heading">
+                        Przywileje członka
+                     </h3>
+                     <select class= "mb-3" v-model.number="member_privileges" min="0" max="2" required>
+                        <option value=0>Tylko do odczytu</option>
+                        <option value=1>Dodawanie zakładek</option>
+                        <option value=2>Dodawanie i usuwanie zakładek</option>
+                    </select>
+                    
+                </div>
+                <!-- Modal footer -->
+                <div class="flex items-center border-t border-default space-x-4 pt-4 md:pt-5">
+                    <button data-modal-hide="add-folder-modal" type="submit" class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">Dodaj</button>
+                    <button data-modal-hide="add-folder-modal" type="reset" class="text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">Zamknij</button>
+                </div>
+            </div>
+        </div>
+        </form>
+    </div>
 </template>

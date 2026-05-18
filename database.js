@@ -103,12 +103,12 @@ export async function getFolders(){
     return rows
 }
 
-export async function getFolder(creator_id){
+export async function getFolderByUser(user_id){
     const [rows] = await pool.query(`
         SELECT * 
         FROM folders
         WHERE creator_id = ?
-        `, [creator_id])
+        `, [user_id])
     return rows
 }
 
@@ -122,6 +122,17 @@ export async function getFolderByID(folder_id){
     return rows[0]
 }
 
+export async function getMyFolder(folder_id, user_id){
+    const [rows] = await pool.query(`
+        SELECT * 
+        FROM folders
+        WHERE folder_id = ?
+        AND
+        creator_id = ?
+        `, [folder_id, user_id])
+    return rows[0]
+}
+
 //const user = await getUser(100)
 //console.log(user)
 
@@ -131,7 +142,7 @@ export async function createFolder(creator_id, name, visibility, member_privileg
         values (?, ?, ?, ?)
     `, [creator_id, name, visibility, member_privileges])
     const folder_id = result.insertId
-    return getFolder(folder_id)
+    return getFolderByID(folder_id)
 }
 
 //const result = await createFolder(1, 'Nowy Folder', 0, 0)

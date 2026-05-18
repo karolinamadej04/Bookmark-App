@@ -12,7 +12,7 @@ CREATE TABLE folders(
     folder_id integer PRIMARY KEY AUTO_INCREMENT,
     creator_id integer NOT NULL,
     name VARCHAR(255) NOT NULL,
-    visibility integer NOT NULL DEFAULT 0,
+    visibility integer NOT NULL DEFAULT 0, -- 0: private, 1: restricted, 2: public
     member_privileges boolean NOT NULL DEFAULT 0,
     creation_date DATE NOT NULL DEFAULT CURDATE(),
     CONSTRAINT fk_Creator
@@ -31,6 +31,7 @@ CREATE TABLE bookmarks(
     CONSTRAINT fk_Folder
     FOREIGN KEY (folder_id)
     REFERENCES folders(folder_id)
+    ON DELETE CASCADE
 );
 
 CREATE TABLE members(
