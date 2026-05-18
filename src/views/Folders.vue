@@ -3,10 +3,15 @@ import { ref, onMounted, watch } from 'vue'
 
 const url = "http://localhost:8080/folders";
 const folders = ref([])
+const token = localStorage.getItem('token')
 
 async function fetchFolders() {
         try {
-            const response = await fetch(url.toString());
+            const response = await fetch(url.toString(), {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                }
+            });
             if (!response.ok) {
             throw new Error(`Response status: ${response.status}`);
             }
@@ -45,10 +50,5 @@ onMounted(() => { fetchFolders() })
         </tr>
   </tbody>
   </table>
-</div>
-<div class="p-4 sm:ml-64">
-  <ul v-for="folder in folders" :key="folder.folder_id">
-    <li>{{ folder.name }}</li>
-  </ul>
 </div>
 </template>

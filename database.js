@@ -1,6 +1,8 @@
 import mysql from 'mysql2'
 
 import dotenv from 'dotenv'
+import bcrypt from 'bcrypt'
+
 dotenv.config()
 
 const pool = mysql.createPool({
@@ -27,14 +29,24 @@ export async function getUser(user_id){
     return rows[0]
 }
 
+export async function getUserByEmail(email){
+    const [rows] = await pool.query(`
+        SELECT * 
+        FROM users
+        WHERE email = ?
+        `, [email])
+    return rows[0]
+}
+
 //const user = await getUser(100)
 //console.log(user)
 
 export async function createUser(email, user_password) {
+    const hashedPassword = await bcrypt.hash(user_password, 10)
     const [result] = await pool.query(`
         INSERT INTO users (email, user_password)    
         values (?, ?)
-    `, [email, user_password])
+    `, [email, hashedPassword])
     const user_id = result.insertId
     return getUser(user_id)
 }
@@ -65,11 +77,12 @@ export async function changeUser(user_id){
 
 
 export async function changePassword(user_id, user_password) {
-    const [rows] = await pool.query(`
+    const hashedPassword = await bcrypt.hash(user_password, 10)
+    const [rows ] = await pool.query(`
         UPDATE users
         SET user_password = ?
         WHERE user_id = ?
-        `, [user_password, user_id])
+        `, [hashedPassword, user_id])
     return rows
 }
 

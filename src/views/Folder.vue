@@ -20,6 +20,7 @@ const name = ref(null)
 const domain = ref("")
 const filtered_phrase = ref("")
 const link = ref("")
+const token = localStorage.getItem('token')
 
 const addBookmark = async () => {
         try {

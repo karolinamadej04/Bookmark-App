@@ -3,7 +3,7 @@ USE bookmark_db;
 
 CREATE TABLE users (
     user_id integer PRIMARY KEY AUTO_INCREMENT,
-    email VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
     user_password VARCHAR(255) NOT NULL,
     creation_date DATE NOT NULL DEFAULT CURDATE()
 );
@@ -101,9 +101,9 @@ CREATE TABLE reports (
 
 INSERT INTO users (email, user_password)
 VALUES
-('km12@gmail.com', 'abc'),
-('bm13@gmail.com', '123'),
-('cm12@gmail.com', '456');
+('km12@gmail.com', '$2b$10$JsNrph5X4Ao8sVmJBvdnV.3e/GnAhPv5fv3ih1L48Fk5.xYosfGje'), -- hasło: abc
+('bm13@gmail.com', '$2b$10$7PS.hNogWYhq6cwv1kJtJ.STh5notONf5/dYw7TBAkUQwLg4X0z1u'), -- hasło: 123
+('cm12@gmail.com', '$2b$10$YKup7KxRb..Qq3VKXpT/I.7q/UPCNHZmVV6pdU9.sJdgtEHBg/gNS'); -- hasło: 456
 
 INSERT INTO folders (creator_id, name, visibility, member_privileges)
 VALUES

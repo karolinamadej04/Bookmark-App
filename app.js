@@ -1,5 +1,5 @@
 import express from "express";
-import { getUsers, getUser, createUser, deleteUser, changePassword, 
+import { getUsers, getUser, getUserByEmail, createUser, deleteUser, changePassword, 
     getFolders, getFolder, getFolderByID, createFolder, deleteFolder, updateFolder,
     getBookmarks, getBookmark, getBookmarkByID, createBookmark, deleteBookmark, updateBookmark,
     getMembers, getMember, getMemberByID, createMember, deleteMember, updateMember,
@@ -10,8 +10,12 @@ import { getUsers, getUser, createUser, deleteUser, changePassword,
     getReports, getReport, createReport, deleteReport} from './database.js'
 import cors from 'cors';
 import path from 'path'
+import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
+import { authenticateToken } from "./middleware/auth.js";
 
 const app = express()
+const JWT_SECRET = process.env.JWT_SECRET
 
 app.use(express.json())
 app.use(cors());
@@ -22,34 +26,73 @@ app.get("/", async (req, res) => {
 
 // ----- Users -----
 
-app.get("/users", async (req, res) => {
+app.get("/users", authenticateToken, async (req, res) => {
     const users = await getUsers()
     res.send(users)
 })
 
-app.get("/users/:user_id", async (req, res) => {
+app.get("/users/:user_id", authenticateToken, async (req, res) => {
     const user_id = req.params.user_id
     const user = await getUser(user_id)
     res.send(user)
 })
 
-app.post("/users", async (req, res) => {
+app.post("/users", authenticateToken, async (req, res) => {
     const { email, user_password } = req.body
     const user = await createUser(email, user_password)
     res.status(201).send(user)
 })
 
-app.delete("/users/:user_id", async (req, res) => {
+app.delete("/users/:user_id", authenticateToken, async (req, res) => {
     const user_id = req.params.user_id
     const user = await deleteUser(user_id)
     res.status(204).send(user)
 })
 
-app.put("/users/:user_id", async (req, res) => {
+app.put("/users/:user_id", authenticateToken, async (req, res) => {
     const user_id = req.params.user_id
     const { user_password } = req.body
     const user = await changePassword(user_id, user_password)
     res.status(200).send(user)
+})
+
+// ----- Login -----
+
+app.post("/login", async (req, res) => {
+    const { email, user_password } = req.body
+    const user = await getUserByEmail(email)
+    if (!user) {
+        return res.status(401).send({
+            message: "Nieprawidłowy email lub hasło."
+        })
+    }
+
+    const passwordMatch = await bcrypt.compare(
+        user_password,
+        user.user_password
+    )
+
+    if (!passwordMatch) {
+        return res.status(401).send({
+            message: "Nieprawidłowy email lub hasło."
+        })
+    }
+
+    const token = jwt.sign(
+        {
+            user_id:user.user_id,
+            email: user.email
+        },
+        JWT_SECRET,
+        { expiresIn: "1h" }
+    )
+    res.send({
+        token,
+        user: {
+            user_id:user.user_id,
+            email: user.email
+        }
+    })
 })
 
 
