@@ -168,6 +168,12 @@ watch(isLoggedIn, (loggedIn) => {
                <span class="flex-1 ms-3 whitespace-nowrap">Zaloguj się</span>
             </RouterLink>
          </li>
+         <li v-if="!isLoggedIn">
+            <RouterLink to="/register" class="flex items-center px-2 py-1.5 text-body rounded-base hover:bg-neutral-tertiary hover:text-fg-brand group">
+               <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9V4a1 1 0 0 0-1-1H8.914a1 1 0 0 0-.707.293L4.293 7.207A1 1 0 0 0 4 7.914V20a1 1 0 0 0 1 1h4M9 3v4a1 1 0 0 1-1 1H4m11 6v4m-2-2h4m3 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0Z"/></svg>
+               <span class="flex-1 ms-3 whitespace-nowrap">Zarejestruj się</span>
+            </RouterLink>
+         </li>
       </ul>
    </div>
 </aside>

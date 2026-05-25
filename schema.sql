@@ -11,7 +11,7 @@ CREATE TABLE users (
 CREATE TABLE folders(
     folder_id integer PRIMARY KEY AUTO_INCREMENT,
     creator_id integer NOT NULL,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255),
     visibility integer NOT NULL DEFAULT 0, -- 0: private, 1: restricted, 2: public
     member_privileges boolean NOT NULL DEFAULT 0,
     creation_date DATE NOT NULL DEFAULT CURDATE(),
@@ -23,11 +23,12 @@ CREATE TABLE folders(
 CREATE TABLE bookmarks(
     bookmark_id integer PRIMARY KEY AUTO_INCREMENT,
     folder_id integer NOT NULL,
+    name VARCHAR(255) NOT NULL,
     link VARCHAR(255) NOT NULL,
     scheduler integer,
-    change_date DATE NOT NULL DEFAULT CURDATE(),
+    change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     page_status char NOT NULL DEFAULT '1',
-    creation_date DATE NOT NULL DEFAULT CURDATE(),
+    creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_Folder
     FOREIGN KEY (folder_id)
     REFERENCES folders(folder_id)
@@ -112,10 +113,11 @@ VALUES
 (2, 'Mój folder 2', 1, 1),
 (3, 'Mój folder 2', 1, 1);
 
-INSERT INTO bookmarks (folder_id, link)
+INSERT INTO bookmarks (folder_id, name, link)
 VALUES 
-(1, 'https://www.youtube.com/'),
-(2, 'https://www.inaturalist.org/places/poland');
+(1, 'youtube', 'https://www.youtube.com/'),
+(1, 'inaturalist', 'https://www.inaturalist.org/places/poland');
+(2, 'inaturalist', 'https://www.inaturalist.org/places/poland');
 
 INSERT INTO members (folder_id, user_id)
 VALUES

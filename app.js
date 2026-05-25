@@ -37,10 +37,34 @@ app.get("/users/:user_id", authenticateToken, async (req, res) => {
     res.send(user)
 })
 
-app.post("/users", authenticateToken, async (req, res) => {
-    const { email, user_password } = req.body
-    const user = await createUser(email, user_password)
-    res.status(201).send(user)
+app.post("/users", async (req, res) => {
+    try {
+        const { email, user_password } = req.body
+        
+        const user = await createUser(
+            email,
+            user_password
+        )
+        const token = jwt.sign(
+            {
+                user_id: user.user_id,
+                email: user.email
+            },
+            process.env.JWT_SECRET,
+            {
+                expiresIn: '7d'
+            }
+        )
+        res.status(201).send({
+            token,
+            user
+        })
+    } catch (error) {
+        console.error(error)
+        res.status(500).send({
+            message: "Niepoprawny email lub hasło."
+        })
+    }
 })
 
 app.delete("/users/:user_id", authenticateToken, async (req, res) => {
@@ -60,6 +84,18 @@ app.put("/users/:user_id", authenticateToken, async (req, res) => {
 
 app.post("/login", async (req, res) => {
     const { email, user_password } = req.body
+
+    if (
+        !email ||
+        !user_password ||
+        typeof email !== "string" ||
+        typeof user_password !== "string"
+    ) {
+        return res.status(400).send({
+            message: "Email i hasło są wymagane."
+        })
+    }
+
     const user = await getUserByEmail(email)
     if (!user) {
         return res.status(401).send({
@@ -195,7 +231,7 @@ app.get("/bookmark/:bookmark_id", async (req, res) => {
 })
 
 app.post("/bookmarks", async (req, res) => {
-    const { folder_id, link } = req.body
+    const { folder_id, name, link } = req.body
     if (!link) {
         return res.status(400).send({
             message: "Potrzeba linku"
@@ -223,7 +259,7 @@ app.post("/bookmarks", async (req, res) => {
         })
     }
 
-    const bookmark = await createBookmark(folder_id, link)
+    const bookmark = await createBookmark(folder_id, name, link)
     res.status(201).send(bookmark)
 })
 
@@ -235,8 +271,8 @@ app.delete("/bookmarks/:bookmark_id", async (req, res) => {
 
 app.put("/bookmarks/:bookmark_id", async (req, res) => {
     const bookmark_id = req.params.bookmark_id
-    const { scheduler, change_date, page_status } = req.body
-    const bookmark = await updateBookmark(bookmark_id, scheduler, change_date, page_status)
+    const { name, scheduler, change_date, page_status } = req.body
+    const bookmark = await updateBookmark(bookmark_id, name, scheduler, change_date, page_status)
     res.status(200).send(bookmark)
 })
 

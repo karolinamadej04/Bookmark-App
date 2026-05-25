@@ -9,20 +9,21 @@ const pool = mysql.createPool({
     host: process.env.MYSQL_HOST,
     user: process.env.MYSQL_USER,
     password: process.env.MYSQL_PASSWORD,
-    database: process.env.MYSQL_DATABASE
+    database: process.env.MYSQL_DATABASE,
+    dateStrings: true
 }).promise()
 
 
 // ----- Users -----
 
 export async function getUsers(){
-    const [rows] = await pool.query("SELECT * FROM users")
+    const [rows] = await pool.query("SELECT user_id, email, creation_date FROM users")
     return rows
 }
 
 export async function getUser(user_id){
     const [rows] = await pool.query(`
-        SELECT * 
+        SELECT user_id, email, creation_date 
         FROM users
         WHERE user_id = ?
         `, [user_id])
@@ -197,11 +198,11 @@ export async function getBookmarkByID(bookmark_id){
 //const bookmark = await getBookmark(100)
 //console.log(bookmark)
 
-export async function createBookmark(folder_id, link) {
+export async function createBookmark(folder_id, name, link) {
     const [result] = await pool.query(`
-        INSERT INTO bookmarks (folder_id, link)    
-        values (?, ?)
-    `, [folder_id, link])
+        INSERT INTO bookmarks (folder_id, name, link)    
+        values (?, ?, ?)
+    `, [folder_id, name, link])
     const bookmark_id = result.insertId
     return getBookmark(bookmark_id)
 }
@@ -218,12 +219,12 @@ export async function deleteBookmark(bookmark_id){
     return rows
 }
 
-export async function updateBookmark(bookmark_id, scheduler, change_date, page_status) {
+export async function updateBookmark(bookmark_id, name, scheduler, change_date, page_status) {
     const [rows] = await pool.query(`
         UPDATE bookmarks
-        SET scheduler = ?, change_date = ?, page_status = ?
+        SET name = ?, scheduler = ?, change_date = ?, page_status = ?
         WHERE bookmark_id = ?
-        `, [scheduler, change_date, page_status, bookmark_id])
+        `, [name, scheduler, change_date, page_status, bookmark_id])
     return rows[0]
 }
 

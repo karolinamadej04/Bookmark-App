@@ -14,6 +14,10 @@ const router = useRouter()
 
 const { fetchFolders } = useFolders()
 
+const search = ref("")
+const sortMode = ref("name")
+
+const bookmark_name = ref("")
 const folder = ref(null)
 const bookmarks = ref([])
 const members = ref([])
@@ -25,6 +29,66 @@ const name = ref(null)
 const domain = ref("")
 const filtered_phrase = ref("")
 const link = ref("")
+
+
+
+const filteredBookmarks = computed(() => {
+    let list = [...bookmarks.value]
+
+    if (search.value) {
+        const query = search.value.toLowerCase()
+
+        list = list.filter(bookmark =>
+            bookmark.link.toLowerCase().includes(query) ||
+            bookmark.name.toLowerCase().includes(query)
+        )
+    }
+
+    switch (sortMode.value) {
+
+        case "name":
+            return list.sort((a, b) =>
+                a.name.localeCompare(b.name)
+            )
+
+        case "updated_desc":
+            return list.sort((a, b) =>
+                new Date(b.change_date) - new Date(a.change_date)
+            )
+
+        case "created_desc":
+            return list.sort((a, b) =>
+                new Date(b.creation_date) - new Date(a.creation_date)
+            )
+
+        case "created_asc":
+            return list.sort((a, b) =>
+                new Date(a.creation_date) - new Date(b.creation_date)
+            )
+
+        default:
+            return list
+    }
+})
+
+function getFavicon(link) {
+
+    try {
+
+        const hostname = new URL(link).hostname
+
+        return `https://www.google.com/s2/favicons?domain=${hostname}&sz=128`
+
+    } catch {
+
+        return '/src/assets/logo.svg'
+    }
+}
+
+function formatDate(date){
+    return date || ""
+}
+
 const isValidLink = computed(() => {
     if (!link.value) return false
 
@@ -66,6 +130,7 @@ const addBookmark = async () => {
                 },
                 body: JSON.stringify({
                     folder_id:route.params.folder_id,
+                    name: bookmark_name.value,
                     link: link.value
                 })
             });
@@ -73,6 +138,7 @@ const addBookmark = async () => {
             throw new Error(`Response status: ${response.status}`);
             }
 
+            bookmark_name.value=""
             link.value=""
             await fetchBookmarks()
         } catch (error) {
@@ -356,16 +422,22 @@ onMounted(() => { fetchFolder(), fetchBookmarks(), fetchMembers(), fetchDomains(
                 <button data-modal-target="remove-folder-modal" data-modal-toggle="remove-folder-modal" class="inline-flex items-center text-nowrap text-white bg-danger hover:bg-danger-strong box-border border border-transparent focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none" type="button">
                     Usuń folder
                     <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/></svg>
-
-
                 </button>
-                <input type="text" id="input-group-1" class="block w-full ps-9 pe-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand px-2.5 py-2 shadow-xs placeholder:text-body" placeholder="Szukaj">
+                <form class="max-w-md mx-auto">   
+                    <label for="search" class="block mb-2.5 text-sm font-medium text-heading sr-only ">Szukaj</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                            <svg class="w-4 h-4 text-body" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/></svg>
+                        </div>
+                        <input type="search" id="search" v-model="search" class="block w-full p-3 ps-9 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand shadow-xs placeholder:text-body" placeholder="Szukaj" required />
+                    </div>
+                </form>
             </div>
         </div>
         
         <div>
         <button id="dropdownDefaultButton" data-dropdown-toggle="dropdown" class="inline-flex items-center justify-center text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none" type="button">
-                Filtruj 
+                Sortuj 
                 <svg class="w-4 h-4 ms-1.5 -me-0.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/></svg>
                 </button>
 
@@ -373,38 +445,41 @@ onMounted(() => { fetchFolder(), fetchBookmarks(), fetchMembers(), fetchDomains(
                 <div id="dropdown" class="z-10 hidden bg-neutral-primary-medium border border-default-medium rounded-base shadow-lg w-44">
                     <ul class="p-2 text-sm text-body font-medium" aria-labelledby="dropdownDefaultButton">
                     <li>
-                        <a href="#" class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded">Nazwa</a>
+                        <a href="#" @click.prevent="sortMode = 'name'" class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded">Nazwa</a>
                     </li>
                     <li>
-                        <a href="#" class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded">Ostatnie aktualizowane</a>
+                        <a href="#" @click.prevent="sortMode = 'update_desc'" class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded">Ostatnie aktualizowane</a>
                     </li>
                     <li>
-                        <a href="#" class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded">Od najnowszych</a>
+                        <a href="#" @click.prevent="sortMode = 'created_desc'" class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded">Od najnowszych</a>
                     </li>
                     <li>
-                        <a href="#" class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded">Od najstarszych</a>
+                        <a href="#" @click.prevent="sortMode = 'created_asc'" class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded">Od najstarszych</a>
                     </li>
                     </ul>
                 </div>
             </div>
 
         <ul>
-        <li v-for="bookmark in bookmarks" :key="bookmark.bookmark_id">
-            <a href="#" class="flex flex-col items-center bg-neutral-primary-soft p-6 border border-default rounded-base shadow-xs md:flex-row md:max-w-5xl">
-                <img class="object-cover w-full rounded-base h-64 md:h-auto md:w-48 mb-4 md:mb-0" src="/src/assets/logo.svg" alt="">
-                <div class="flex flex-col justify-between md:p-4 leading-normal">
-                    <h5 class="mb-2 text-2xl font-bold tracking-tight text-heading">{{ bookmark.link }}</h5>
-                    <p class="mb-6 text-body">Status: {{ bookmark.page_status }}<br>
-                        Ostatnio zaktualizowano: {{ bookmark.change_date }}<br>
-                    Utworzono: {{ bookmark.creation_date }}</p>
-                    <div>
-                        <button @click="deleteBookmark(bookmark.bookmark_id)" type="button" class="inline-flex items-center w-auto text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">
-                            <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/></svg>
-                            Usuń
-                        </button>
+        <li v-for="bookmark in filteredBookmarks" :key="bookmark.bookmark_id">
+            <div class="flex flex-col items-center bg-neutral-primary-soft p-6 border border-default rounded-base shadow-xs md:flex-row md:max-w-5xl">
+                <a target="_blank" rel="noopener noreferrer" :href="bookmark.link" class="flex flex-col items-center md:flex-row w-full">
+                    <img class="object-cover w-full rounded-base h-64 md:h-auto md:w-48 mb-4 md:mb-0" :src="getFavicon(bookmark.link)" :alt="bookmark.name">
+                    <div class="flex flex-col justify-between md:p-4 leading-normal">
+                        <h5 class="mb-2 text-3xl font-bold tracking-tight text-heading">{{ bookmark.name }}</h5>
+                        <h5 class="mb-2 text-xl font-bold tracking-tight text-heading">{{ bookmark.link }}</h5>
+                        <p class="mb-6 text-body">Status: {{ bookmark.page_status }}<br>
+                        Ostatnio zaktualizowano: {{ formatDate(bookmark.change_date) }}<br>
+                        Utworzono: {{ formatDate(bookmark.creation_date) }}</p>
                     </div>
+                </a>
+                <div class="mt-4 md:mt-0 md:ml-auto">
+                    <button @click.stop="deleteBookmark(bookmark.bookmark_id)" type="button" class="inline-flex items-center w-auto text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">
+                        <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/></svg>
+                        Usuń
+                    </button>
                 </div>
-            </a>
+            </div>
         </li>
     </ul>
 
@@ -427,6 +502,9 @@ onMounted(() => { fetchFolder(), fetchBookmarks(), fetchMembers(), fetchDomains(
                 </div>
                 <!-- Modal body -->
                 <div class="space-y-4 md:space-y-6 py-4 md:py-6">
+                    <p class="leading-relaxed text-body">       
+                            <input type="text" class= "mb-1" v-model="bookmark_name" placeholder="Nazwa"><br>
+                    </p>
                     <p class="leading-relaxed text-body">       
                             <input type="url" class= "mb-1" v-model="link" placeholder="https://example.com" required><br>
                     </p>
@@ -518,7 +596,7 @@ onMounted(() => { fetchFolder(), fetchBookmarks(), fetchMembers(), fetchDomains(
     <h4>Nazwa: {{ folder.name }}</h4>
     <h4>Widoczność: {{ folder.visibility }}</h4>
     <h4>Przywileje członków: {{ folder.member_privileges }}</h4>
-    <h4>Data utworzenia: {{ folder.creation_date }}</h4>
+    <h4>Data utworzenia: {{ formatDate(folder.creation_date) }}</h4>
   </div>
 
   <div>
