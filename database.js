@@ -134,6 +134,16 @@ export async function getMyFolder(folder_id, user_id){
     return rows[0]
 }
 
+export async function getFoldersFromMember(user_id){
+    const [rows] = await pool.query(`
+        SELECT f.*
+        FROM folders f
+        JOIN members m ON f.folder_id = m.folder_id
+        WHERE m.user_id = ?
+        `, [user_id])
+    return rows
+}
+
 //const user = await getUser(100)
 //console.log(user)
 
@@ -263,6 +273,29 @@ export async function getMemberByID(member_id){
     return rows[0]
 }
 
+export async function createMember(folder_id, email) {
+    const [users] = await pool.query(`
+        SELECT user_id
+        FROM users
+        WHERE email = ?
+        LIMIT 1
+    `, [email])
+
+    if (users.length === 0) {
+        throw new Error("User not found")
+    }
+    
+    const user_id = users[0].user_id
+
+    const [result] = await pool.query(`
+        INSERT INTO members (folder_id, user_id)    
+        values (?, ?)
+    `, [folder_id, user_id])
+    const member_id = result.insertId
+    return getMember(member_id)
+}
+
+/*
 export async function createMember(folder_id, user_id) {
     const [result] = await pool.query(`
         INSERT INTO members (folder_id, user_id)    
@@ -271,6 +304,7 @@ export async function createMember(folder_id, user_id) {
     const member_id = result.insertId
     return getMember(member_id)
 }
+*/
 
 export async function deleteMember(member_id){
     const [rows] = await pool.query(`
@@ -290,6 +324,24 @@ export async function updateMember(member_id, role, filter_type) {
     return rows[0]
 }
 
+export async function userHasFolderAccess(folder_id, user_id) {
+
+    const [rows] = await pool.query(`
+        SELECT folders.folder_id
+        FROM folders
+        LEFT JOIN members
+        ON folders.folder_id = members.folder_id
+        WHERE folders.folder_id = ?
+        AND (
+            folders.creator_id = ?
+            OR members.user_id = ?
+        )
+
+        LIMIT 1
+    `, [folder_id, user_id, user_id])
+
+    return rows.length > 0
+}
 // ----- Domains -----
 
 export async function getDomains(){

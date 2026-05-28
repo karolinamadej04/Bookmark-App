@@ -44,9 +44,13 @@ CREATE TABLE members(
     CONSTRAINT fk_member_folder
     FOREIGN KEY (folder_id)
     REFERENCES folders(folder_id),
+
     CONSTRAINT fk_member_user
     FOREIGN KEY (user_id)
-    REFERENCES users(user_id)
+    REFERENCES users(user_id),
+
+    CONSTRAINT unique_folder_member
+    UNIQUE (folder_id, user_id)
 );
 
 CREATE TABLE domains(
@@ -116,8 +120,9 @@ VALUES
 INSERT INTO bookmarks (folder_id, name, link)
 VALUES 
 (1, 'youtube', 'https://www.youtube.com/'),
-(1, 'inaturalist', 'https://www.inaturalist.org/places/poland');
-(2, 'inaturalist', 'https://www.inaturalist.org/places/poland');
+(1, 'inaturalist', 'https://www.inaturalist.org/places/poland'),
+(2, 'inaturalist', 'https://www.inaturalist.org/places/poland'),
+(3, 'inaturalist', 'https://www.inaturalist.org/places/poland');
 
 INSERT INTO members (folder_id, user_id)
 VALUES

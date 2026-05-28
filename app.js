@@ -1,8 +1,8 @@
 import express from "express";
 import { getUsers, getUser, getUserByEmail, createUser, deleteUser, changePassword, 
-    getFolders, getFolderByUser, getFolderByID, getMyFolder, createFolder, deleteFolder, updateFolder,
+    getFolders, getFolderByUser, getFolderByID, getMyFolder, getFoldersFromMember, createFolder, deleteFolder, updateFolder,
     getBookmarks, getBookmark, getBookmarkByID, createBookmark, deleteBookmark, updateBookmark,
-    getMembers, getMember, getMemberByID, createMember, deleteMember, updateMember,
+    getMembers, getMember, getMemberByID, createMember, deleteMember, updateMember, userHasFolderAccess,
     getDomains, getDomain, getDomainByID, createDomain, deleteDomain,
     getFilters, getFilter, getFilterByID, createFilter, deleteFilter,
     getClickNumbers, getClickNumber, createClickNumber, deleteClickNumber, setClickNumber,
@@ -139,15 +139,40 @@ app.get("/folders", async (req, res) => {
     res.send(folders)
 })
 
-app.get("/folders/:creator_id", async (req, res) => {
+
+app.get("/allfolders/:creator_id", async (req, res) => {
     const user_id = req.params.creator_id
     const folder = await getFolderByUser(user_id)
     res.send(folder)
 })
 
+/*
 app.get("/folder/:folder_id", async (req, res) => {
     const folder_id = req.params.folder_id
     const folder = await getFolderByID(folder_id)
+    res.send(folder)
+})
+*/
+app.get("/folders/:folder_id", authenticateToken, async (req, res) => {
+
+    const folder_id = req.params.folder_id
+    const user_id = req.user.user_id
+
+    const folder = await getFolderByID(folder_id)
+
+    if (!folder) {
+        return res.status(404).send({
+            message: "Folder nie istnieje."
+        })
+    }
+
+    const hasAccess = await userHasFolderAccess(folder_id, user_id)
+
+    if (!hasAccess) {
+        return res.status(403).send({
+            message: "Brak dostępu."
+        })
+    }
     res.send(folder)
 })
 
@@ -177,6 +202,11 @@ app.get("/folders/:folder_id", async (req, res) => {
     res.send(folder)
 })
 */
+app.get("/memberfolders", authenticateToken, async (req, res) => {
+    const user_id = req.user.user_id
+    const folders = await getFoldersFromMember(user_id)
+    res.send(folders)
+})
 
 app.post("/folders", async (req, res) => {
     const { creator_id, name, visibility, member_privileges } = req.body
@@ -193,6 +223,15 @@ app.post("/myfolders", authenticateToken, async (req, res) => {
 
 app.delete("/folders/:folder_id", async (req, res) => {
     const folder_id = req.params.folder_id
+    const user_id = req.user.user_id
+
+    const hasAccess = await userHasFolderAccess(folder_id, user_id)
+
+    if (!hasAccess) {
+        return res.status(403).send({
+            message: "Brak dostępu."
+        })
+    }
     const folder = await deleteFolder(folder_id)
     res.status(204).send(folder)
 })
@@ -218,8 +257,17 @@ app.get("/bookmarks/:bookmark_id", async (req, res) => {
     res.send(bookmark)
 })
 */
-app.get("/bookmarks/:folder_id", async (req, res) => {
+app.get("/bookmarks/:folder_id", authenticateToken, async (req, res) => {
     const folder_id = req.params.folder_id
+    const user_id = req.user.user_id
+
+    const hasAccess = await userHasFolderAccess(folder_id, user_id)
+
+    if (!hasAccess) {
+        return res.status(403).send({
+            message: "Brak dostępu."
+        })
+    }
     const bookmark = await getBookmark(folder_id)
     res.send(bookmark)
 })
@@ -256,6 +304,16 @@ app.post("/bookmarks", async (req, res) => {
 
         return res.status(400).send({
             message: "Invalid URL"
+        })
+    }
+
+    const user_id = req.user.user_id
+
+    const hasAccess = await userHasFolderAccess(folder_id, user_id)
+
+    if (!hasAccess) {
+        return res.status(403).send({
+            message: "Brak dostępu."
         })
     }
 
@@ -296,9 +354,21 @@ app.get("/member/:member_id", async (req, res) => {
 })
 
 app.post("/members", async (req, res) => {
-    const { folder_id, user_id } = req.body
-    const member = await createMember(folder_id, user_id)
-    res.status(201).send(member)
+    try{
+        const { folder_id, email } = req.body
+        const member = await createMember(folder_id, email)
+        res.status(201).send(member)
+    }
+    catch (err) {
+        if(err.code === "ER_DUP_ENTRY") {
+            return res.status(400).send({
+                message:"Użytkownik już jest członkiem folderu."
+            })
+        }
+        res.status(500).send({
+            message:"Błąd serwera."
+        })
+    }
 })
 
 app.delete("/members/:member_id", async (req, res) => {
@@ -321,8 +391,17 @@ app.get("/domains", async (req, res) => {
     res.send(domains)
 })
 
-app.get("/domains/:folder_id", async (req, res) => {
+app.get("/domains/:folder_id", authenticateToken, async (req, res) => {
     const folder_id = req.params.folder_id
+    const user_id = req.user.user_id
+
+    const hasAccess = await userHasFolderAccess(folder_id, user_id)
+
+    if (!hasAccess) {
+        return res.status(403).send({
+            message: "Brak dostępu."
+        })
+    }
     const domain = await getDomain(folder_id)
     res.send(domain)
 })
@@ -346,8 +425,17 @@ app.get("/filters", async (req, res) => {
     res.send(filter)
 })
 
-app.get("/filters/:folder_id", async (req, res) => {
+app.get("/filters/:folder_id", authenticateToken, async (req, res) => {
     const folder_id = req.params.folder_id
+    const user_id = req.user.user_id
+
+    const hasAccess = await userHasFolderAccess(folder_id, user_id)
+
+    if (!hasAccess) {
+        return res.status(403).send({
+            message: "Brak dostępu."
+        })
+    }
     const filter = await getFilter(folder_id)
     res.send(filter)
 })
