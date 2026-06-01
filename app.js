@@ -73,9 +73,17 @@ app.post("/users", async (req, res) => {
 })
 
 app.delete("/users/:user_id", authenticateToken, async (req, res) => {
-    const user_id = req.params.user_id
-    const user = await deleteUser(user_id)
-    res.status(204).send(user)
+    const user_id = Number(req.params.user_id)
+
+    if (user_id !== req.user.user_id) {
+        return res.status(403).send({
+            message: "Brak dostępu."
+        })
+    }
+
+    await deleteUser(user_id)
+
+    res.sendStatus(204)
 })
 
 app.put("/users/:user_id", authenticateToken, async (req, res) => {

@@ -512,12 +512,12 @@ onMounted( async () => {
                 <h4 v-if="folder" class="text-3xl font-bold tracking-tight text-heading md:text-4xl">{{folder.name}}</h4>
             </div>
             <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-search">
-                <button data-modal-target="default-modal-0" data-modal-toggle="default-modal-0" class="inline-flex items-center  text-white bg-brand hover:bg-brand-strong box-border border border-transparent focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none" type="button">
+                <button data-modal-target="default-modal-0" data-modal-toggle="default-modal-0" class="mr-1 inline-flex items-center  text-white bg-brand hover:bg-brand-strong box-border border border-transparent focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none" type="button">
                     Dodaj
                     <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5"/></svg>
 
                 </button>
-                <button data-modal-target="remove-folder-modal" data-modal-toggle="remove-folder-modal" :disabled="!user || !folder || folder.creator_id !== user.user_id" class="inline-flex items-center text-nowrap text-white bg-danger hover:bg-danger-strong box-border border border-transparent focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none disabled:border-gray-200 disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none" type="button">
+                <button data-modal-target="remove-folder-modal" data-modal-toggle="remove-folder-modal" :disabled="!user || !folder || folder.creator_id !== user.user_id" class="mr-1 inline-flex items-center text-nowrap text-white bg-danger hover:bg-danger-strong box-border border border-transparent focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none disabled:border-gray-200 disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none" type="button">
                     Usuń folder
                     <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/></svg>
                 </button>
@@ -534,7 +534,7 @@ onMounted( async () => {
         </div>
         
         <div>
-        <button id="dropdownDefaultButton" data-dropdown-toggle="dropdown" class="inline-flex items-center justify-center text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none" type="button">
+        <button id="dropdownDefaultButton" data-dropdown-toggle="dropdown" class="mb-2 inline-flex items-center justify-center text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none" type="button">
                 Sortuj 
                 <svg class="w-4 h-4 ms-1.5 -me-0.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/></svg>
                 </button>
@@ -770,7 +770,7 @@ onMounted( async () => {
             <h4 class="text-3xl font-bold tracking-tight text-heading md:text-4xl">Dozwolone domeny</h4>
             
             <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-search">
-                <button :disabled="!user || !folder || folder.creator_id !== user.user_id" data-modal-target="default-modal" data-modal-toggle="default-modal" class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none disabled:border-gray-200 disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none" type="button">Dodaj</button>
+                <button :disabled="!user || !folder || folder.creator_id !== user.user_id" data-modal-target="default-modal" data-modal-toggle="default-modal" class="mr-1 text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none disabled:border-gray-200 disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none" type="button">Dodaj</button>
                 <input type="text" id="input-group-1" class="block w-full ps-9 pe-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand px-2.5 py-2 shadow-xs placeholder:text-body" placeholder="Szukaj">
             </div>
         </div>
@@ -843,7 +843,7 @@ onMounted( async () => {
             <h4 class="text-3xl font-bold tracking-tight text-heading md:text-4xl">Filtry</h4>
             
             <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-search">
-                <button :disabled="!user || !folder || folder.creator_id !== user.user_id" data-modal-target="default-modal2" data-modal-toggle="default-modal2" class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none disabled:border-gray-200 disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none" type="button">Dodaj</button>
+                <button :disabled="!user || !folder || folder.creator_id !== user.user_id" data-modal-target="default-modal2" data-modal-toggle="default-modal2" class="mr-1 text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none disabled:border-gray-200 disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none" type="button">Dodaj</button>
                 <input type="text" id="input-group-1" class="block w-full ps-9 pe-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand px-2.5 py-2 shadow-xs placeholder:text-body" placeholder="Szukaj">
             </div>
         </div>
