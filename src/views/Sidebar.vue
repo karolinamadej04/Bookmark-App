@@ -218,7 +218,7 @@ watch(isLoggedIn, (loggedIn) => {
                      <select class= "mb-3" v-model.number="member_privileges" min="0" max="2" required>
                         <option value=0>Tylko do odczytu</option>
                         <option value=1>Dodawanie zakładek</option>
-                        <option value=2>Dodawanie i usuwanie zakładek</option>
+                        <option value=2>Pełne przywileje</option>
                     </select>
                     
                 </div>

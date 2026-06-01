@@ -550,3 +550,24 @@ export async function deleteReport(report_id){
         `, [report_id])
     return rows
 }
+
+/*
+export async function getLastModified(link) {
+
+    try {
+
+        const response = await fetch(link, {
+            method: "HEAD"
+        })
+
+        const lastModified = response.headers.get("last-modified")
+
+        return lastModified
+
+    } catch (error) {
+
+        console.error(error)
+
+        return null
+    }
+}*/

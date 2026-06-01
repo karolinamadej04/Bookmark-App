@@ -2,6 +2,7 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useFolders } from '@/stores/folders'
+import { useAuth } from '@/stores/auth';
 
 const url = "http://localhost:8080/folders";
 const url2 = "http://localhost:8080/bookmarks";
@@ -11,6 +12,7 @@ const url5 = "http://localhost:8080/domains";
 const url6 = "http://localhost:8080/filters";
 const route = useRoute()
 const router = useRouter()
+const { user, fetchMe } = useAuth()
 
 const { fetchFolders } = useFolders()
 
@@ -34,7 +36,6 @@ const link = ref("")
 
 const memberSuccess = ref("")
 const memberError = ref("")
-
 
 const deleteMember = async (member_id) => {
         try {
@@ -169,10 +170,13 @@ const removeFolder = async () => {
 
 const addBookmark = async () => {
         try {
+            const token = localStorage.getItem('token')
+
             const response = await fetch(url2.toString(), {
                 method:"POST",
                 headers: {
-                    "Content-Type":"application/json"
+                    "Content-Type":"application/json",
+                    Authorization: `Bearer ${token}`
                 },
                 body: JSON.stringify({
                     folder_id:route.params.folder_id,
@@ -181,6 +185,8 @@ const addBookmark = async () => {
                 })
             });
             if (!response.ok) {
+            const text = await response.text()
+            console.log(text)
             throw new Error(`Response status: ${response.status}`);
             }
 
@@ -225,7 +231,8 @@ const changeName = async () => {
             }
 
             name.value = ""
-            await fetchFolders()
+            await fetchFolder()
+            await fetchFolders() // Odświeżanie panelu bocznego
         } catch (error) {
             console.error(error.message);
         }
@@ -249,7 +256,7 @@ const changeVisibility = async () => {
             }
 
             visibility.value = null
-            await fetchFolders()
+            await fetchFolder()
         } catch (error) {
             console.error(error.message);
         }
@@ -273,7 +280,7 @@ const changeMemberPrivileges = async () => {
             }
 
             member_privileges.value = null
-            await fetchFolders()
+            await fetchFolder()
         } catch (error) {
             console.error(error.message);
         }
@@ -369,7 +376,11 @@ async function fetchFolder() {
                 return
             }
 
-            folder.value = await response.json();
+            const data = await response.json()
+
+            folder.value = data
+            visibility.value = data.visibility
+            member_privileges.value = data.member_privileges
         } catch (error) {
             accessDenied.value = true
             router.replace({ name: 'NotFound' })
@@ -462,6 +473,7 @@ async function fetchFilters() {
 
 
 onMounted( async () => { 
+    await fetchMe()
     await fetchFolder()
     if (accessDenied.value) return
     await fetchBookmarks()
@@ -505,7 +517,7 @@ onMounted( async () => {
                     <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5"/></svg>
 
                 </button>
-                <button data-modal-target="remove-folder-modal" data-modal-toggle="remove-folder-modal" class="inline-flex items-center text-nowrap text-white bg-danger hover:bg-danger-strong box-border border border-transparent focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none" type="button">
+                <button data-modal-target="remove-folder-modal" data-modal-toggle="remove-folder-modal" :disabled="!user || !folder || folder.creator_id !== user.user_id" class="inline-flex items-center text-nowrap text-white bg-danger hover:bg-danger-strong box-border border border-transparent focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none disabled:border-gray-200 disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none" type="button">
                     Usuń folder
                     <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/></svg>
                 </button>
@@ -647,7 +659,7 @@ onMounted( async () => {
             <h4 class="text-3xl font-bold tracking-tight text-heading md:text-4xl">Członkowie</h4>
             
             <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-search">
-                <button data-modal-target="default-modal-add-member" data-modal-toggle="default-modal-add-member" type="button" class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-full text-sm px-4 py-2.5 focus:outline-none">Dodaj</button>
+                <button data-modal-target="default-modal-add-member" data-modal-toggle="default-modal-add-member" type="button" class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-full text-sm px-4 py-2.5 focus:outline-none disabled:border-gray-200 disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none" :disabled="!user || !folder || folder.creator_id !== user.user_id">Dodaj</button>
             </div>
         </div>
     <table class="w-full table-fixed text-sm text-left text-gray-500 dark:text-gray-400">
@@ -665,7 +677,7 @@ onMounted( async () => {
             </th>
             <td>{{ member.user_id }}</td>
             <td>
-                <button @click.stop="deleteMember(member.member_id)" type="button" class="inline-flex items-center w-auto text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">
+                <button @click.stop="deleteMember(member.member_id)" type="button" class="inline-flex items-center w-auto text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none disabled:border-gray-200 disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none" :disabled="!user || !folder || folder.creator_id !== user.user_id">
                         <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/></svg>
                         Usuń
                 </button>
@@ -716,37 +728,39 @@ onMounted( async () => {
 
 
     <div class="hidden p-4 rounded-base bg-neutral-secondary-soft" id="settings" role="tabpanel" aria-labelledby="settings-tab">
-        <div v-if="folder">
-    <h4 class="text-3xl font-bold tracking-tight text-heading md:text-4xl">Ustawienia</h4>
-    <h4>ID: {{ folder.folder_id }}</h4>
-    <h4>Twórca: {{ folder.creator_id }}</h4>
-    <h4>Nazwa: {{ folder.name }}</h4>
-    <h4>Widoczność: {{ folder.visibility }}</h4>
-    <h4>Przywileje członków: {{ folder.member_privileges }}</h4>
-    <h4>Data utworzenia: {{ formatDate(folder.creation_date) }}</h4>
-  </div>
+    <div v-if="folder">
+        <h4 class="text-3xl font-bold tracking-tight text-heading md:text-4xl">Ustawienia</h4>
+        <h4>ID: {{ folder.folder_id }}</h4>
+        <h4>Twórca: {{ folder.creator_id }}</h4>
+        <h4>Nazwa: {{ folder.name }}</h4>
+        <h4>Data utworzenia: {{ formatDate(folder.creation_date) }}</h4>
+  
+        
+        <h3 class= "mb-3">Zmień nazwę</h3>
+        <form @submit.prevent="changeName">
+            <input type="text" class= "mb-3" v-model="name" placeholder="Nazwa folderu" required :disabled="!user || !folder || folder.creator_id !== user.user_id"><br>
+            <button type="submit" class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-full text-sm px-4 py-2.5 focus:outline-none disabled:border-gray-200 disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none" :disabled="!user || !folder || folder.creator_id !== user.user_id">Zmień</button>
+        </form>
 
-  <div>
-    <h3 class= "mb-3">Zmień nazwę</h3>
-    <form @submit.prevent="changeName">
-        <input type="text" class= "mb-3" v-model="name" placeholder="Nazwa folderu" required><br>
-        <button type="submit" class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-full text-sm px-4 py-2.5 focus:outline-none">Zmień</button>
-    </form>
-  </div>
 
-  <div>
-    <h3 class= "mb-3">Zmień widoczność</h3>
-    <form @submit.prevent="changeVisibility">
-        <input type="number" class= "mb-3" v-model.number="visibility" min="0" max="2" required><br>
-        <button type="submit" class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-full text-sm px-4 py-2.5 focus:outline-none"">Zmień</button>
-    </form>
-  </div>
+        <h3 class= "mb-3">Zmień widoczność</h3>
+        <form @submit.prevent="changeVisibility">
+            <select class= "mb-3" v-model.number="visibility" @change="changeVisibility" :disabled="!user || !folder || folder.creator_id !== user.user_id">
+                        <option :value=0>Prywatny</option>
+                        <option :value=1>Ograniczony</option>
+                        <option :value=2>Publiczny</option>
+            </select>
+        </form>
+    </div>
 
   <div>
     <h3 class= "mb-3">Zmień przywileje członków</h3>
     <form @submit.prevent="changeMemberPrivileges">
-        <input type="number" class= "mb-3" v-model.number="member_privileges" min="0" max="2" required><br>
-        <button type="submit" class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-full text-sm px-4 py-2.5 focus:outline-none">Zmień</button>
+        <select class= "mb-3" v-model.number="member_privileges" @change="changeMemberPrivileges" :disabled="!user || !folder || folder.creator_id !== user.user_id">
+                     <option :value=0>Tylko do odczytu</option>
+                     <option :value=1>Dodawanie zakładek</option>
+                     <option :value=2>Pełne przywileje</option>
+            </select>
     </form>
   </div>
     </div>
@@ -756,7 +770,7 @@ onMounted( async () => {
             <h4 class="text-3xl font-bold tracking-tight text-heading md:text-4xl">Dozwolone domeny</h4>
             
             <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-search">
-                <button data-modal-target="default-modal" data-modal-toggle="default-modal" class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none" type="button">Dodaj</button>
+                <button :disabled="!user || !folder || folder.creator_id !== user.user_id" data-modal-target="default-modal" data-modal-toggle="default-modal" class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none disabled:border-gray-200 disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none" type="button">Dodaj</button>
                 <input type="text" id="input-group-1" class="block w-full ps-9 pe-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand px-2.5 py-2 shadow-xs placeholder:text-body" placeholder="Szukaj">
             </div>
         </div>
@@ -775,7 +789,7 @@ onMounted( async () => {
             </th>
             <td>{{ domain.domain }}</td>
             <td>
-                <button @click="deleteDomain(domain.domain_id)" type="button" class="inline-flex items-center w-auto text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">
+                <button :disabled="!user || !folder || folder.creator_id !== user.user_id" @click="deleteDomain(domain.domain_id)" type="button" class="inline-flex items-center w-auto text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none disabled:border-gray-200 disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none">
                             <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/></svg>
                             Usuń
                 </button>
@@ -829,7 +843,7 @@ onMounted( async () => {
             <h4 class="text-3xl font-bold tracking-tight text-heading md:text-4xl">Filtry</h4>
             
             <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-search">
-                <button data-modal-target="default-modal2" data-modal-toggle="default-modal2" class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none" type="button">Dodaj</button>
+                <button :disabled="!user || !folder || folder.creator_id !== user.user_id" data-modal-target="default-modal2" data-modal-toggle="default-modal2" class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none disabled:border-gray-200 disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none" type="button">Dodaj</button>
                 <input type="text" id="input-group-1" class="block w-full ps-9 pe-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand px-2.5 py-2 shadow-xs placeholder:text-body" placeholder="Szukaj">
             </div>
         </div>
@@ -848,7 +862,7 @@ onMounted( async () => {
             </th>
             <td>{{ filter.filtered_phrase }}</td>
             <td>
-                <button @click="deleteFilter(filter.filter_id)" type="button" class="inline-flex items-center w-auto text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">
+                <button :disabled="!user || !folder || folder.creator_id !== user.user_id" @click="deleteFilter(filter.filter_id)" type="button" class="inline-flex items-center w-auto text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none disabled:border-gray-200 disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none">
                             <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/></svg>
                             Usuń
                 </button>

@@ -27,7 +27,6 @@ export function useMemberFolders() {
             console.log('memberFolders:', memberFolders.value)
 
         } catch (error) {
-
             console.error(error.message)
         }
     }

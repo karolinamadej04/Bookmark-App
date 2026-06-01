@@ -37,6 +37,11 @@ app.get("/users/:user_id", authenticateToken, async (req, res) => {
     res.send(user)
 })
 
+app.get("/me", authenticateToken, async (req, res) => {
+    const user = await getUser(req.user.user_id)
+    res.send(user)
+})
+
 app.post("/users", async (req, res) => {
     try {
         const { email, user_password } = req.body
@@ -166,14 +171,19 @@ app.get("/folders/:folder_id", authenticateToken, async (req, res) => {
         })
     }
 
+    if (folder.creator_id === user_id) {
+        return res.send(folder)
+    }
+
     const hasAccess = await userHasFolderAccess(folder_id, user_id)
 
-    if (!hasAccess) {
-        return res.status(403).send({
-            message: "Brak dostępu."
-        })
+    if (hasAccess && (folder.visibility === 1 || folder.visibility === 2)){
+        return res.send(folder)
     }
-    res.send(folder)
+    
+    return res.status(403).send({
+        message: "Brak dostępu."
+    })
 })
 
 app.get("/myfolders", authenticateToken, async (req, res) => {
@@ -278,7 +288,7 @@ app.get("/bookmark/:bookmark_id", async (req, res) => {
     res.send(bookmark)
 })
 
-app.post("/bookmarks", async (req, res) => {
+app.post("/bookmarks", authenticateToken, async (req, res) => {
     const { folder_id, name, link } = req.body
     if (!link) {
         return res.status(400).send({
