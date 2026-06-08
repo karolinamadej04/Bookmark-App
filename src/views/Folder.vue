@@ -37,6 +37,23 @@ const link = ref("")
 const memberSuccess = ref("")
 const memberError = ref("")
 
+
+
+async function fetchLastModified(link) {
+    try {
+        const response = await fetch(
+            `http://localhost:8080/bookmark-last-modified?url=${encodeURIComponent(link)}`
+        )
+
+        const data = await response.json()
+
+        return data.lastModified
+    }
+    catch {
+        return null
+    }
+}
+
 const deleteMember = async (member_id) => {
         try {
             const response = await fetch(url4+`/${member_id}`, {
@@ -134,6 +151,23 @@ function getFavicon(link) {
 
 function formatDate(date){
     return date || ""
+}
+
+
+function formatUpdateDate(dateString) {
+    if (!dateString) return ""
+
+    const date = new Date(dateString)
+
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    const seconds = String(date.getSeconds()).padStart(2, '0')
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
 }
 
 const isValidLink = computed(() => {
@@ -546,7 +580,7 @@ onMounted( async () => {
                         <a href="#" @click.prevent="sortMode = 'name'" class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded">Nazwa</a>
                     </li>
                     <li>
-                        <a href="#" @click.prevent="sortMode = 'update_desc'" class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded">Ostatnie aktualizowane</a>
+                        <a href="#" @click.prevent="sortMode = 'updated_desc'" class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded">Ostatnie aktualizowane</a>
                     </li>
                     <li>
                         <a href="#" @click.prevent="sortMode = 'created_desc'" class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded">Od najnowszych</a>
@@ -565,10 +599,21 @@ onMounted( async () => {
                     <img class="object-cover w-full rounded-base h-64 md:h-auto md:w-48 mb-4 md:mb-0" :src="getFavicon(bookmark.link)" :alt="bookmark.name">
                     <div class="flex flex-col justify-between md:p-4 leading-normal">
                         <h5 class="mb-2 text-3xl font-bold tracking-tight text-heading">{{ bookmark.name }}</h5>
-                        <h5 class="mb-2 text-xl font-bold tracking-tight text-heading">{{ bookmark.link }}</h5>
-                        <p class="mb-6 text-body">Status: {{ bookmark.page_status }}<br>
-                        Ostatnio zaktualizowano: {{ formatDate(bookmark.change_date) }}<br>
-                        Utworzono: {{ formatDate(bookmark.creation_date) }}</p>
+                        <h5 class="mb-2 text-l font-bold tracking-tight text-heading">{{ bookmark.link }}</h5>
+                        <p class="mb-6 text-body">
+                        
+                        <span
+                            :class="{
+                                'text-green-600': bookmark.page_status >= 200 && bookmark.page_status < 300,
+                                'text-orange-400': (bookmark.page_status >= 300 && bookmark.page_status < 400) || (bookmark.page_status > 400 && bookmark.page_status != 404),
+                                'text-red-600': bookmark.page_status === 400 || bookmark.page_status === 404 || bookmark.page_status === 0
+                            }"
+                        >
+                            Status: {{ bookmark.page_status }}
+                        </span>
+                        <br>
+                        <h1 v-if="bookmark.change_date!=null">Ostatnio zaktualizowano: {{ formatUpdateDate(bookmark.change_date) }}<br></h1>
+                        Utworzono: {{ formatUpdateDate(bookmark.creation_date) }}</p>
                     </div>
                 </a>
                 <div class="mt-4 md:mt-0 md:ml-auto">

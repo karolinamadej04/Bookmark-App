@@ -27,7 +27,7 @@ CREATE TABLE bookmarks(
     link VARCHAR(255) NOT NULL,
     scheduler integer,
     change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    page_status char NOT NULL DEFAULT '1',
+    page_status int NOT NULL DEFAULT 200,
     creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_Folder
     FOREIGN KEY (folder_id)
@@ -121,6 +121,8 @@ INSERT INTO bookmarks (folder_id, name, link)
 VALUES 
 (1, 'youtube', 'https://www.youtube.com/'),
 (1, 'inaturalist', 'https://www.inaturalist.org/places/poland'),
+(1, 'tailwind', 'https://flowbite.com/docs/components/modal/'),
+(1, 'translator', 'https://www.google.com/search?client=firefox-b-d&q=translator+english+portuguese+brazil'),
 (2, 'inaturalist', 'https://www.inaturalist.org/places/poland'),
 (3, 'inaturalist', 'https://www.inaturalist.org/places/poland');
 

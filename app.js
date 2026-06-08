@@ -286,14 +286,75 @@ app.get("/bookmarks/:folder_id", authenticateToken, async (req, res) => {
             message: "Brak dostępu."
         })
     }
-    const bookmark = await getBookmark(folder_id)
-    res.send(bookmark)
+    const bookmarks = await getBookmark(folder_id)
+
+    for (const bookmark of bookmarks) {
+        try {
+            const response = await fetch(bookmark.link, {
+                method: 'HEAD',
+                redirect: 'follow'
+            })
+
+            bookmark.page_status = response.status
+            bookmark.change_date =
+                response.headers.get('last-modified')
+        }
+        catch {
+            bookmark.change_date = null
+        }
+    }
+
+    res.send(bookmarks)
 })
 
 app.get("/bookmark/:bookmark_id", async (req, res) => {
     const bookmark_id = req.params.bookmark_id
     const bookmark = await getBookmarkByID(bookmark_id)
     res.send(bookmark)
+})
+
+app.get('/bookmark-last-modified', async (req, res) => {
+    try {
+        const url = req.query.url
+
+        const response = await fetch(url, {
+            method: 'HEAD'
+        })
+
+        const lastModified =
+            response.headers.get('last-modified')
+
+        res.json({
+            lastModified
+        })
+
+    } catch (error) {
+        res.status(500).json({
+            error: error.message
+        })
+    }
+})
+
+
+
+app.get('/bookmark-status', async (req, res) => {
+    try {
+        const url = req.query.url
+
+        const response = await fetch(url, {
+            method: 'HEAD',
+            redirect: 'follow'
+        })
+
+        res.json({
+            status: response.status
+        })
+    }
+    catch {
+        res.json({
+            status: 0
+        })
+    }
 })
 
 app.post("/bookmarks", authenticateToken, async (req, res) => {
